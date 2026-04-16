@@ -11,15 +11,47 @@ import { Separator } from "@/components/ui/separator";
 import {
   Loader2, Search, Filter, StickyNote, CheckSquare, AlertTriangle, FileText,
   Eye, MapPin, Phone, Mail, CreditCard, Truck, Package, Calendar, Hash,
-  User, ClipboardList, Tag
+  User, ClipboardList, Tag, Trash2, CalendarRange, X
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useAllOrders, useUpdateOrderStatus, useUpdateOrderDeliveryCost, OrderStatus, Order } from "@/hooks/useOrders";
+import { useAllOrders, useUpdateOrderStatus, useUpdateOrderDeliveryCost, useDeleteOrder, OrderStatus, Order } from "@/hooks/useOrders";
 import { useUpdateOrderNotes, useSiteSettings } from "@/hooks/useAdminSettings";
 import { toast } from "sonner";
 import { EnterpriseConfirmDialog } from "@/components/admin/EnterpriseConfirmDialog";
 import { EnterpriseEmptyState } from "@/components/admin/EnterpriseEmptyState";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+
+type DatePreset = "all" | "today" | "week" | "month" | "last_month" | "custom";
+
+function getDateRange(preset: DatePreset, customFrom?: string, customTo?: string): { from: Date | null; to: Date | null } {
+  const now = new Date();
+  if (preset === "today") {
+    const start = new Date(now); start.setHours(0, 0, 0, 0);
+    const end = new Date(now); end.setHours(23, 59, 59, 999);
+    return { from: start, to: end };
+  }
+  if (preset === "week") {
+    const start = new Date(now); start.setDate(now.getDate() - now.getDay()); start.setHours(0, 0, 0, 0);
+    const end = new Date(now); end.setHours(23, 59, 59, 999);
+    return { from: start, to: end };
+  }
+  if (preset === "month") {
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    const end = new Date(now); end.setHours(23, 59, 59, 999);
+    return { from: start, to: end };
+  }
+  if (preset === "last_month") {
+    const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+    return { from: start, to: end };
+  }
+  if (preset === "custom" && customFrom && customTo) {
+    const from = new Date(customFrom); from.setHours(0, 0, 0, 0);
+    const to = new Date(customTo); to.setHours(23, 59, 59, 999);
+    return { from, to };
+  }
+  return { from: null, to: null };
+}
 
 export const OrdersAdvanced = () => {
   const { language, t } = useLanguage();
@@ -27,10 +59,15 @@ export const OrdersAdvanced = () => {
   const updateOrderStatus = useUpdateOrderStatus();
   const updateOrderDeliveryCost = useUpdateOrderDeliveryCost();
   const updateOrderNotes = useUpdateOrderNotes();
+  const deleteOrder = useDeleteOrder();
   const { data: siteSettings } = useSiteSettings();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [datePreset, setDatePreset] = useState<DatePreset>("all");
+  const [customDateFrom, setCustomDateFrom] = useState<string>("");
+  const [customDateTo, setCustomDateTo] = useState<string>("");
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const [noteDialog, setNoteDialog] = useState<{ open: boolean; orderId: string; currentNote: string }>({
     open: false,
@@ -48,13 +85,20 @@ export const OrdersAdvanced = () => {
     }
   }, [detailOrder]);
 
+  const { from: dateFrom, to: dateTo } = getDateRange(datePreset, customDateFrom, customDateTo);
+
   const filteredOrders = orders?.filter((order) => {
     const matchesSearch =
       order.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.customer_phone.includes(searchTerm);
     const matchesStatus = statusFilter === "all" || order.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    let matchesDate = true;
+    if (dateFrom && dateTo) {
+      const orderDate = new Date(order.created_at);
+      matchesDate = orderDate >= dateFrom && orderDate <= dateTo;
+    }
+    return matchesSearch && matchesStatus && matchesDate;
   });
 
   const toggleOrderSelection = (orderId: string) => {
@@ -106,6 +150,18 @@ export const OrdersAdvanced = () => {
     }
   };
 
+  const handleDeleteOrder = async () => {
+    if (!deleteConfirmId) return;
+    try {
+      await deleteOrder.mutateAsync(deleteConfirmId);
+      toast.success(language === "bn" ? "অর্ডার মুছে ফেলা হয়েছে" : "Order deleted successfully");
+      setDeleteConfirmId(null);
+      if (detailOrder?.id === deleteConfirmId) setDetailOrder(null);
+    } catch {
+      toast.error(t("somethingWentWrong"));
+    }
+  };
+
   const handleUpdateDeliveryCost = async () => {
     if (!detailOrder) return;
     try {
@@ -144,15 +200,8 @@ export const OrdersAdvanced = () => {
 
   return (
     <div className="space-y-4">
-      {/* DEBUG INFO */}
-      <div className="bg-muted p-2 text-[10px] font-mono rounded border border-debug">
-        DEBUG: Orders Count: {orders?.length ?? "undefined"},
-        Filtered Count: {filteredOrders?.length ?? "undefined"},
-        Status: {statusFilter}, Search: "{searchTerm}"
-      </div>
-
       {/* Filters & Search */}
-      <div className="flex flex-wrap gap-4">
+      <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -177,6 +226,63 @@ export const OrdersAdvanced = () => {
           </SelectContent>
         </Select>
       </div>
+
+      {/* Date Filter Row */}
+      <div className="flex flex-wrap items-center gap-2">
+        <CalendarRange className="h-4 w-4 text-muted-foreground shrink-0" />
+        {(["all", "today", "week", "month", "last_month", "custom"] as DatePreset[]).map((preset) => {
+          const labels: Record<DatePreset, string> = {
+            all: language === "bn" ? "সব সময়" : "All Time",
+            today: language === "bn" ? "আজ" : "Today",
+            week: language === "bn" ? "এই সপ্তাহ" : "This Week",
+            month: language === "bn" ? "এই মাস" : "This Month",
+            last_month: language === "bn" ? "গত মাস" : "Last Month",
+            custom: language === "bn" ? "কাস্টম" : "Custom",
+          };
+          return (
+            <button
+              key={preset}
+              onClick={() => setDatePreset(preset)}
+              className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                datePreset === preset
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-background text-muted-foreground border-border hover:border-primary hover:text-primary"
+              }`}
+            >
+              {labels[preset]}
+            </button>
+          );
+        })}
+        {datePreset !== "all" && (
+          <button
+            onClick={() => { setDatePreset("all"); setCustomDateFrom(""); setCustomDateTo(""); }}
+            className="ml-1 text-muted-foreground hover:text-destructive"
+            title={language === "bn" ? "ফিল্টার সরান" : "Clear filter"}
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+
+      {/* Custom Date Range Inputs */}
+      {datePreset === "custom" && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
+          <Input
+            type="date"
+            className="w-40 h-8 text-sm"
+            value={customDateFrom}
+            onChange={(e) => setCustomDateFrom(e.target.value)}
+          />
+          <span className="text-muted-foreground text-sm">{language === "bn" ? "থেকে" : "to"}</span>
+          <Input
+            type="date"
+            className="w-40 h-8 text-sm"
+            value={customDateTo}
+            onChange={(e) => setCustomDateTo(e.target.value)}
+          />
+        </div>
+      )}
 
       {/* Bulk Actions */}
       {selectedOrders.length > 0 && (
@@ -320,6 +426,16 @@ export const OrdersAdvanced = () => {
                       >
                         <StickyNote className="h-4 w-4" />
                       </Button>
+
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        title={language === "bn" ? "অর্ডার মুছুন" : "Delete Order"}
+                        onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(order.id); }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -379,6 +495,19 @@ export const OrdersAdvanced = () => {
         ]}
         onConfirm={handleBulkStatusUpdate}
         isLoading={updateOrderStatus.isPending}
+      />
+
+      {/* Delete Order Confirmation */}
+      <EnterpriseConfirmDialog
+        open={!!deleteConfirmId}
+        onOpenChange={(open) => !open && setDeleteConfirmId(null)}
+        title={language === "bn" ? "অর্ডার মুছে ফেলুন" : "Delete Order"}
+        description={language === "bn" ? "আপনি কি নিশ্চিত? এই অর্ডারটি স্থায়ীভাবে মুছে যাবে এবং আর ফিরিয়ে আনা যাবে না।" : "Are you sure? This order will be permanently deleted and cannot be recovered."}
+        type="destructive"
+        confirmLabel={language === "bn" ? "মুছে ফেলুন" : "Delete"}
+        cancelLabel={t("cancel")}
+        onConfirm={handleDeleteOrder}
+        isLoading={deleteOrder.isPending}
       />
 
       {/* ====== ORDER DETAIL DIALOG ====== */}

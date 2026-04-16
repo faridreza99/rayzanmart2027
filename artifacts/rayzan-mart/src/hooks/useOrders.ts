@@ -258,3 +258,21 @@ export const useUpdateOrderDeliveryCost = () => {
     },
   });
 };
+
+export const useDeleteOrder = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (orderId: string) => {
+      const { error } = await apiClient
+        .from("orders")
+        .delete()
+        .eq("id", orderId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+    },
+  });
+};
