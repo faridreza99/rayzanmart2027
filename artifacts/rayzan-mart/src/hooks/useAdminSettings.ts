@@ -301,6 +301,38 @@ export const useAdminResendVerification = () => {
   });
 };
 
+export const useAdminResetUserPassword = () => {
+  return useMutation({
+    mutationFn: async ({ user_id, new_password }: { user_id: string; new_password: string }) => {
+      const token = localStorage.getItem("rm_auth_token");
+      const res = await fetch("/api/auth/admin/reset-user-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ user_id, new_password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed");
+      return data;
+    },
+  });
+};
+
+export const useAdminSendResetEmail = () => {
+  return useMutation({
+    mutationFn: async (user_id: string) => {
+      const token = localStorage.getItem("rm_auth_token");
+      const res = await fetch("/api/auth/admin/send-reset-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ user_id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed");
+      return data;
+    },
+  });
+};
+
 export const useUpdateProfile = () => {
   const queryClient = useQueryClient();
 

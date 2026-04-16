@@ -299,6 +299,13 @@ router.post("/auth/forgot-password", async (req, res) => {
     await query("UPDATE users SET reset_token = $1, reset_token_expires = $2 WHERE id = $3", [token, expiry, user.id]);
 
     sendPasswordResetEmail(email, token).catch(err => logger.warn({ err }, "password reset email failed"));
+
+    // Log reset request event
+    query(
+      "INSERT INTO user_login_logs (user_id, event_type, ip_address, user_agent) VALUES ($1, 'pw_reset_req', $2, $3)",
+      [user.id, req.ip || null, req.headers["user-agent"] || null]
+    ).catch(() => {});
+
     res.json({ message: "Password reset email sent" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -318,7 +325,15 @@ router.post("/auth/reset-password", async (req, res) => {
     if (result.rows.length === 0) return res.status(400).json({ error: "Invalid or expired reset token" });
 
     const hash = await bcrypt.hash(password, 10);
-    await query("UPDATE users SET password_hash = $1, reset_token = NULL, reset_token_expires = NULL WHERE id = $2", [hash, result.rows[0].id]);
+    const targetId = result.rows[0].id;
+    await query("UPDATE users SET password_hash = $1, reset_token = NULL, reset_token_expires = NULL WHERE id = $2", [hash, targetId]);
+
+    // Log password reset completion
+    query(
+      "INSERT INTO user_login_logs (user_id, event_type, ip_address, user_agent) VALUES ($1, 'pw_reset_done', $2, $3)",
+      [targetId, req.ip || null, req.headers["user-agent"] || null]
+    ).catch(() => {});
+
     res.json({ message: "Password updated" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -397,9 +412,100 @@ router.put("/auth/change-password", requireAuth, async (req, res) => {
 
     const hash = await bcrypt.hash(new_password, 10);
     await query("UPDATE users SET password_hash = $1 WHERE id = $2", [hash, userId]);
+
+    // Audit log — only if admin_audit_log exists (admin changing own password)
+    const isAdminResult = await query("SELECT 1 FROM user_roles WHERE user_id = $1 AND role = 'admin'", [userId]);
+    if (isAdminResult.rows.length > 0) {
+      await query(
+        `INSERT INTO admin_audit_log (admin_user_id, action_type, entity_type, entity_id, description_bn, description_en)
+         VALUES ($1, 'self_password_change', 'user', $1, $2, $3)`,
+        [userId, "অ্যাডমিন নিজের পাসওয়ার্ড পরিবর্তন করেছেন", "Admin changed their own password"]
+      );
+    }
+
     res.json({ success: true, message: "Password changed successfully" });
   } catch (err: any) {
     logger.error({ err }, "change-password error");
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /auth/admin/reset-user-password — admin directly sets a user's password
+router.post("/auth/admin/reset-user-password", requireAuth, async (req, res) => {
+  try {
+    const adminId = (req as any).userId;
+    const adminCheck = await query("SELECT 1 FROM user_roles WHERE user_id = $1 AND role = 'admin'", [adminId]);
+    if (adminCheck.rows.length === 0) return res.status(403).json({ error: "Admin access required" });
+
+    const { user_id, new_password } = req.body;
+    if (!user_id || !new_password) return res.status(400).json({ error: "user_id and new_password required" });
+    if (new_password.length < 8) return res.status(400).json({ error: "Password must be at least 8 characters" });
+
+    const userRes = await query("SELECT id, email FROM users WHERE id = $1", [user_id]);
+    if (userRes.rows.length === 0) return res.status(404).json({ error: "User not found" });
+    const targetUser = userRes.rows[0];
+
+    const hash = await bcrypt.hash(new_password, 10);
+    await query("UPDATE users SET password_hash = $1, reset_token = NULL, reset_token_expires = NULL WHERE id = $2", [hash, user_id]);
+
+    // Audit log
+    await query(
+      `INSERT INTO admin_audit_log (admin_user_id, action_type, entity_type, entity_id, description_bn, description_en)
+       VALUES ($1, 'password_reset', 'user', $2, $3, $4)`,
+      [
+        adminId,
+        user_id,
+        `অ্যাডমিন ${targetUser.email}-এর পাসওয়ার্ড সরাসরি রিসেট করেছেন`,
+        `Admin directly reset password for ${targetUser.email}`,
+      ]
+    );
+
+    logger.info({ adminId, targetUserId: user_id, targetEmail: targetUser.email }, "Admin reset user password directly");
+    res.json({ success: true, message: "Password updated successfully" });
+  } catch (err: any) {
+    logger.error({ err }, "admin-reset-user-password error");
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /auth/admin/send-reset-email — admin sends a password reset email to any user
+router.post("/auth/admin/send-reset-email", requireAuth, async (req, res) => {
+  try {
+    const adminId = (req as any).userId;
+    const adminCheck = await query("SELECT 1 FROM user_roles WHERE user_id = $1 AND role = 'admin'", [adminId]);
+    if (adminCheck.rows.length === 0) return res.status(403).json({ error: "Admin access required" });
+
+    const { user_id } = req.body;
+    if (!user_id) return res.status(400).json({ error: "user_id required" });
+
+    const userRes = await query("SELECT id, email FROM users WHERE id = $1", [user_id]);
+    if (userRes.rows.length === 0) return res.status(404).json({ error: "User not found" });
+    const targetUser = userRes.rows[0];
+
+    const token = uuidv4();
+    const expiry = new Date(Date.now() + 60 * 60 * 1000);
+    await query("UPDATE users SET reset_token = $1, reset_token_expires = $2 WHERE id = $3", [token, expiry, user_id]);
+
+    // Audit log
+    await query(
+      `INSERT INTO admin_audit_log (admin_user_id, action_type, entity_type, entity_id, description_bn, description_en)
+       VALUES ($1, 'password_reset_email', 'user', $2, $3, $4)`,
+      [
+        adminId,
+        user_id,
+        `অ্যাডমিন ${targetUser.email}-এ পাসওয়ার্ড রিসেট ইমেইল পাঠিয়েছেন`,
+        `Admin sent password reset email to ${targetUser.email}`,
+      ]
+    );
+
+    sendPasswordResetEmail(targetUser.email, token).catch((err: any) =>
+      logger.warn({ err }, "Admin-triggered reset email failed to send")
+    );
+
+    logger.info({ adminId, targetUserId: user_id, targetEmail: targetUser.email }, "Admin sent reset email for user");
+    res.json({ success: true, message: "Password reset email sent" });
+  } catch (err: any) {
+    logger.error({ err }, "admin-send-reset-email error");
     res.status(500).json({ error: err.message });
   }
 });

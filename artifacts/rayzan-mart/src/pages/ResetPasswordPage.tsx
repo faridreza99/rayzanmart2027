@@ -1,20 +1,19 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Lock, Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { Lock, Eye, EyeOff, ShieldCheck, AlertCircle } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 
 const ResetPasswordPage = () => {
   const { language } = useLanguage();
-  const { updatePassword } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
+  const [searchParams] = useSearchParams();
+
+  const token = searchParams.get("token") || "";
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -24,54 +23,18 @@ const ResetPasswordPage = () => {
   const [isValidToken, setIsValidToken] = useState<boolean | null>(null);
 
   useEffect(() => {
-    let mounted = true;
-
-    // Listen for the recovery event or session
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && session)) {
-        if (mounted) setIsValidToken(true);
-      }
-    });
-
-    const checkSession = async () => {
-      // Small delay to allow Supabase to process hash fragments
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      if (!mounted) return;
-
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      // Check standard hash fragments in case it's a raw recovery URL
-      // Use window.location.hash instead of location.hash to prevent reactivity loops
-      const hashStr = window.location.hash;
-      const isRecovery = hashStr.includes("type=recovery") || hashStr.includes("access_token=");
-
-      if (session || isRecovery) {
-        setIsValidToken(true);
-      } else {
-        setIsValidToken(false);
-        toast.error(
-          language === "bn" 
-            ? "অবৈধ বা মেয়াদোত্তীর্ণ রিসেট লিংক!" 
-            : "Invalid or expired reset link!"
-        );
-        setTimeout(() => mounted && navigate('/forgot-password'), 3000);
-      }
-    };
-
-    void checkSession();
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, [navigate, language]);
+    if (!token) {
+      setIsValidToken(false);
+    } else {
+      setIsValidToken(true);
+    }
+  }, [token]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (password.length < 6) {
-      toast.error(language === "bn" ? "পাসওয়ার্ড অন্তত ৬ অক্ষরের হতে হবে।" : "Password must be at least 6 characters.");
+    if (password.length < 8) {
+      toast.error(language === "bn" ? "পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে।" : "Password must be at least 8 characters.");
       return;
     }
 
@@ -81,23 +44,32 @@ const ResetPasswordPage = () => {
     }
 
     setLoading(true);
-    const result = await updatePassword(password);
-    
-    if (result.success) {
+    try {
+      const res = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, password }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to reset password");
+      }
+
       setIsSuccess(true);
-      toast.success(
-        language === "bn" 
-          ? "পাসওয়ার্ড সফলভাবে আপডেট করা হয়েছে!" 
-          : "Password updated successfully!"
-      );
-      
-      // Auto redirect to dashboard after 3 seconds
-      setTimeout(() => navigate('/dashboard'), 3000);
-    } else {
-      toast.error(result.error || (language === "bn" ? "কিছু ভুল হয়েছে" : "Something went wrong"));
+      toast.success(language === "bn" ? "পাসওয়ার্ড সফলভাবে আপডেট করা হয়েছে!" : "Password updated successfully!");
+      setTimeout(() => navigate("/login"), 3000);
+    } catch (err: any) {
+      const msg = err.message || "";
+      if (msg.toLowerCase().includes("expired") || msg.toLowerCase().includes("invalid")) {
+        setIsValidToken(false);
+        toast.error(language === "bn" ? "রিসেট লিংকটি মেয়াদ শেষ বা অবৈধ। নতুন লিংকের জন্য আবেদন করুন।" : "Reset link has expired or is invalid. Please request a new one.");
+      } else {
+        toast.error(msg || (language === "bn" ? "কিছু ভুল হয়েছে" : "Something went wrong"));
+      }
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   if (isValidToken === null) {
@@ -109,6 +81,35 @@ const ResetPasswordPage = () => {
             <p className="text-muted-foreground">
               {language === "bn" ? "লিংক যাচাই করা হচ্ছে..." : "Verifying link..."}
             </p>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (!isValidToken) {
+    return (
+      <MainLayout>
+        <div className="container flex min-h-[70vh] items-center justify-center py-12">
+          <div className="w-full max-w-md">
+            <div className="rounded-xl bg-card p-8 shadow-lg border border-slate-100 text-center">
+              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
+                <AlertCircle className="h-8 w-8 text-red-600" />
+              </div>
+              <h2 className="mb-3 text-2xl font-bold text-slate-900">
+                {language === "bn" ? "অবৈধ বা মেয়াদোত্তীর্ণ লিংক" : "Invalid or Expired Link"}
+              </h2>
+              <p className="text-slate-500 mb-8 leading-relaxed">
+                {language === "bn"
+                  ? "এই রিসেট লিংকটি কাজ করছে না। অনুগ্রহ করে নতুন রিসেট লিংকের জন্য আবেদন করুন।"
+                  : "This reset link is no longer valid. Please request a new password reset link."}
+              </p>
+              <Link to="/forgot-password">
+                <Button className="w-full h-11">
+                  {language === "bn" ? "নতুন লিংক অনুরোধ করুন" : "Request New Link"}
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </MainLayout>
@@ -129,15 +130,12 @@ const ResetPasswordPage = () => {
                   {language === "bn" ? "পাসওয়ার্ড রিসেট সফল!" : "Password Reset Successful!"}
                 </h2>
                 <p className="text-slate-500 mb-8 leading-relaxed">
-                  {language === "bn" 
-                    ? "আপনার পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে। আপনাকে ড্যাশবোর্ডে রিডাইরেক্ট করা হচ্ছে..." 
-                    : "Your password has been changed successfully. Redirecting you to the dashboard..."}
+                  {language === "bn"
+                    ? "আপনার পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে। কয়েক সেকেন্ডের মধ্যে লগইন পেজে নিয়ে যাওয়া হবে..."
+                    : "Your password has been changed successfully. Redirecting to login page..."}
                 </p>
-                <Button 
-                  className="w-full h-11"
-                  onClick={() => navigate('/dashboard')}
-                >
-                  {language === "bn" ? "ড্যাশবোর্ডে যান" : "Go to Dashboard"}
+                <Button className="w-full h-11" onClick={() => navigate("/login")}>
+                  {language === "bn" ? "লগইন পেজে যান" : "Go to Login"}
                 </Button>
               </div>
             ) : (
@@ -150,15 +148,15 @@ const ResetPasswordPage = () => {
                     {language === "bn" ? "নতুন পাসওয়ার্ড সেট করুন" : "Set New Password"}
                   </h1>
                   <p className="text-sm text-slate-500">
-                    {language === "bn" 
-                      ? "আপনার অ্যাকাউন্টের জন্য একটি শক্তিশালী নতুন পাসওয়ার্ড ইনপুট দিন।" 
+                    {language === "bn"
+                      ? "আপনার অ্যাকাউন্টের জন্য একটি শক্তিশালী নতুন পাসওয়ার্ড ইনপুট দিন।"
                       : "Enter a strong new password for your account."}
                   </p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div className="space-y-2">
-                    <Label htmlFor="password">{language === "bn" ? "নতুন পাসওয়ার্ড" : "New Password"}</Label>
+                    <Label htmlFor="password">{language === "bn" ? "নতুন পাসওয়ার্ড" : "New Password"}</Label>
                     <div className="relative">
                       <Input
                         id="password"
@@ -167,7 +165,7 @@ const ResetPasswordPage = () => {
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="••••••••"
                         required
-                        minLength={6}
+                        minLength={8}
                         className="h-11 pr-10"
                       />
                       <Button
@@ -180,10 +178,13 @@ const ResetPasswordPage = () => {
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </Button>
                     </div>
+                    <p className="text-xs text-muted-foreground">
+                      {language === "bn" ? "কমপক্ষে ৮ অক্ষর প্রয়োজন" : "Minimum 8 characters required"}
+                    </p>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">{language === "bn" ? "পুনরায় পাসওয়ার্ড দিন" : "Confirm Password"}</Label>
+                    <Label htmlFor="confirmPassword">{language === "bn" ? "পুনরায় পাসওয়ার্ড দিন" : "Confirm Password"}</Label>
                     <Input
                       id="confirmPassword"
                       type={showPassword ? "text" : "password"}
@@ -191,18 +192,29 @@ const ResetPasswordPage = () => {
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="••••••••"
                       required
-                      minLength={6}
+                      minLength={8}
                       className="h-11"
                     />
+                    {confirmPassword && password !== confirmPassword && (
+                      <p className="text-xs text-destructive">
+                        {language === "bn" ? "পাসওয়ার্ড মিলছে না" : "Passwords do not match"}
+                      </p>
+                    )}
                   </div>
 
-                  <Button type="submit" className="w-full h-11 text-base font-medium transition-all mt-4" disabled={loading}>
+                  <Button
+                    type="submit"
+                    className="w-full h-11 text-base font-medium transition-all mt-4"
+                    disabled={loading}
+                  >
                     {loading ? (
                       <span className="flex items-center gap-2">
                         <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                         {language === "bn" ? "আপডেট হচ্ছে..." : "Updating..."}
                       </span>
-                    ) : (language === "bn" ? "পাসওয়ার্ড সেভ করুন" : "Save Password")}
+                    ) : (
+                      language === "bn" ? "পাসওয়ার্ড সেভ করুন" : "Save Password"
+                    )}
                   </Button>
                 </form>
               </>

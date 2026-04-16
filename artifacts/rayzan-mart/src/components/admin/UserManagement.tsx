@@ -7,9 +7,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Search, User, Ban, Info, Eye, CheckCircle, MailX, Send } from "lucide-react";
+import { Loader2, Search, User, Ban, Info, Eye, CheckCircle, MailX, Send, KeyRound, Mail, Lock } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useAllProfiles, useUpdateProfile, useUpdateUserRole, useAdminConfirmEmail, useAdminResendVerification } from "@/hooks/useAdminSettings";
+import { useAllProfiles, useUpdateProfile, useUpdateUserRole, useAdminConfirmEmail, useAdminResendVerification, useAdminResetUserPassword, useAdminSendResetEmail } from "@/hooks/useAdminSettings";
 import { useAllOrders } from "@/hooks/useOrders";
 import { toast } from "sonner";
 
@@ -21,6 +21,8 @@ export const UserManagement = () => {
   const updateUserRole = useUpdateUserRole();
   const adminConfirmEmail = useAdminConfirmEmail();
   const adminResendVerification = useAdminResendVerification();
+  const adminResetUserPassword = useAdminResetUserPassword();
+  const adminSendResetEmail = useAdminSendResetEmail();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState<any>(null);
@@ -29,6 +31,14 @@ export const UserManagement = () => {
     action: "",
     user: null,
   });
+  const [resetPwDialog, setResetPwDialog] = useState<{ open: boolean; user: any; tab: "email" | "direct" }>({
+    open: false,
+    user: null,
+    tab: "email",
+  });
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPw, setShowPw] = useState(false);
 
   const filteredProfiles = profiles?.filter(
     (p) =>
@@ -117,6 +127,45 @@ export const UserManagement = () => {
       toast.success(language === "bn" ? "ভেরিফিকেশন ইমেইল পাঠানো হয়েছে" : "Verification email sent");
     } catch {
       toast.error(t("somethingWentWrong"));
+    }
+  };
+
+  const openResetPwDialog = (user: any) => {
+    setNewPassword("");
+    setConfirmPassword("");
+    setShowPw(false);
+    setResetPwDialog({ open: true, user, tab: "email" });
+  };
+
+  const handleSendResetEmail = async () => {
+    if (!resetPwDialog.user) return;
+    try {
+      await adminSendResetEmail.mutateAsync(resetPwDialog.user.user_id);
+      toast.success(language === "bn" ? "পাসওয়ার্ড রিসেট ইমেইল পাঠানো হয়েছে" : "Password reset email sent");
+      setResetPwDialog({ open: false, user: null, tab: "email" });
+    } catch (err: any) {
+      toast.error(err.message || t("somethingWentWrong"));
+    }
+  };
+
+  const handleDirectResetPassword = async () => {
+    if (!resetPwDialog.user) return;
+    if (newPassword.length < 8) {
+      toast.error(language === "bn" ? "পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে" : "Password must be at least 8 characters");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error(language === "bn" ? "পাসওয়ার্ড দুটি মিলছে না" : "Passwords do not match");
+      return;
+    }
+    try {
+      await adminResetUserPassword.mutateAsync({ user_id: resetPwDialog.user.user_id, new_password: newPassword });
+      toast.success(language === "bn" ? "পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে" : "Password updated successfully");
+      setResetPwDialog({ open: false, user: null, tab: "email" });
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err: any) {
+      toast.error(err.message || t("somethingWentWrong"));
     }
   };
 
@@ -267,6 +316,15 @@ export const UserManagement = () => {
                               <Button
                                 variant="outline"
                                 size="sm"
+                                className="h-7 px-2 border-amber-400 text-amber-600 hover:bg-amber-50"
+                                onClick={() => openResetPwDialog(user)}
+                                title={language === "bn" ? "পাসওয়ার্ড রিসেট" : "Reset password"}
+                              >
+                                <KeyRound className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
                                 className="h-7 px-2"
                                 onClick={() => setSelectedUser(user)}
                               >
@@ -383,6 +441,161 @@ export const UserManagement = () => {
             >
               {confirmDialog.action === "block" ? t("blockUser") : t("unblockUser")}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Password Dialog */}
+      <Dialog
+        open={resetPwDialog.open}
+        onOpenChange={(open) => !open && setResetPwDialog({ open: false, user: null, tab: "email" })}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="h-4 w-4 text-amber-500" />
+              {language === "bn" ? "পাসওয়ার্ড রিসেট" : "Reset Password"}
+            </DialogTitle>
+            <DialogDescription>
+              {resetPwDialog.user?.name} &mdash; {resetPwDialog.user?.email}
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* Tab Switcher */}
+          <div className="flex rounded-lg border overflow-hidden">
+            <button
+              className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium transition-colors ${
+                resetPwDialog.tab === "email"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-background text-muted-foreground hover:bg-muted"
+              }`}
+              onClick={() => setResetPwDialog((d) => ({ ...d, tab: "email" }))}
+            >
+              <Mail className="h-3.5 w-3.5" />
+              {language === "bn" ? "ইমেইল পাঠান" : "Send Email"}
+            </button>
+            <button
+              className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium transition-colors ${
+                resetPwDialog.tab === "direct"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-background text-muted-foreground hover:bg-muted"
+              }`}
+              onClick={() => setResetPwDialog((d) => ({ ...d, tab: "direct" }))}
+            >
+              <Lock className="h-3.5 w-3.5" />
+              {language === "bn" ? "সরাসরি সেট করুন" : "Set Directly"}
+            </button>
+          </div>
+
+          {/* Email Tab */}
+          {resetPwDialog.tab === "email" && (
+            <div className="space-y-3">
+              <Alert className="border-blue-200 bg-blue-50">
+                <Mail className="h-4 w-4 text-blue-500" />
+                <AlertDescription className="text-sm text-blue-700">
+                  {language === "bn"
+                    ? "ব্যবহারকারীর ইমেইলে একটি পাসওয়ার্ড রিসেট লিংক পাঠানো হবে। লিংকটি ১ ঘণ্টা সক্রিয় থাকবে।"
+                    : "A password reset link will be sent to the user's email address. The link expires in 1 hour."}
+                </AlertDescription>
+              </Alert>
+              <p className="text-sm text-muted-foreground">
+                {language === "bn" ? "প্রেরণ করা হবে:" : "Will be sent to:"}{" "}
+                <span className="font-medium text-foreground">{resetPwDialog.user?.email}</span>
+              </p>
+            </div>
+          )}
+
+          {/* Direct Set Tab */}
+          {resetPwDialog.tab === "direct" && (
+            <div className="space-y-3">
+              <Alert className="border-amber-200 bg-amber-50">
+                <Lock className="h-4 w-4 text-amber-500" />
+                <AlertDescription className="text-sm text-amber-700">
+                  {language === "bn"
+                    ? "এই অ্যাকশন অবিলম্বে পাসওয়ার্ড পরিবর্তন করবে। ব্যবহারকারীকে নতুন পাসওয়ার্ড জানান।"
+                    : "This will immediately change the password. Make sure to inform the user of the new password."}
+                </AlertDescription>
+              </Alert>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">
+                  {language === "bn" ? "নতুন পাসওয়ার্ড" : "New Password"}
+                </label>
+                <div className="relative">
+                  <Input
+                    type={showPw ? "text" : "password"}
+                    placeholder={language === "bn" ? "কমপক্ষে ৮ অক্ষর" : "Minimum 8 characters"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    onClick={() => setShowPw(!showPw)}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">
+                  {language === "bn" ? "পাসওয়ার্ড নিশ্চিত করুন" : "Confirm Password"}
+                </label>
+                <Input
+                  type={showPw ? "text" : "password"}
+                  placeholder={language === "bn" ? "আবার টাইপ করুন" : "Re-enter password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+                {confirmPassword && newPassword !== confirmPassword && (
+                  <p className="text-xs text-destructive">
+                    {language === "bn" ? "পাসওয়ার্ড মিলছে না" : "Passwords do not match"}
+                  </p>
+                )}
+                {confirmPassword && newPassword === confirmPassword && newPassword.length >= 8 && (
+                  <p className="text-xs text-green-600 flex items-center gap-1">
+                    <CheckCircle className="h-3 w-3" />
+                    {language === "bn" ? "পাসওয়ার্ড মিলেছে" : "Passwords match"}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setResetPwDialog({ open: false, user: null, tab: "email" })}
+            >
+              {t("cancel")}
+            </Button>
+            {resetPwDialog.tab === "email" ? (
+              <Button
+                onClick={handleSendResetEmail}
+                disabled={adminSendResetEmail.isPending}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {adminSendResetEmail.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <Send className="h-4 w-4 mr-2" />
+                )}
+                {language === "bn" ? "ইমেইল পাঠান" : "Send Email"}
+              </Button>
+            ) : (
+              <Button
+                onClick={handleDirectResetPassword}
+                disabled={adminResetUserPassword.isPending || newPassword.length < 8 || newPassword !== confirmPassword}
+                className="bg-amber-600 hover:bg-amber-700"
+              >
+                {adminResetUserPassword.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <KeyRound className="h-4 w-4 mr-2" />
+                )}
+                {language === "bn" ? "পাসওয়ার্ড সেট করুন" : "Set Password"}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
