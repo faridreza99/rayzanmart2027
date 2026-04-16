@@ -46,6 +46,8 @@ export interface SiteSettings {
     max_redeem_percentage: number;
     points_validity_days: number;
   };
+  loyalty_points_per_order: number;
+  loyalty_points_value: number;
 }
 
 export interface CommissionRule {

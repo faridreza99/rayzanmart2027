@@ -21,6 +21,8 @@ export const LoyaltySettings = () => {
   const [minRedeemPoints, setMinRedeemPoints] = useState(50);
   const [maxRedeemPercentage, setMaxRedeemPercentage] = useState(50);
   const [pointsValidityDays, setPointsValidityDays] = useState(365);
+  const [pointsPerOrder, setPointsPerOrder] = useState(10);
+  const [pointsValue, setPointsValue] = useState(100);
 
   useEffect(() => {
     if (settings?.loyalty_rules) {
@@ -31,6 +33,8 @@ export const LoyaltySettings = () => {
       setMaxRedeemPercentage(settings.loyalty_rules.max_redeem_percentage ?? 50);
       setPointsValidityDays(settings.loyalty_rules.points_validity_days ?? 365);
     }
+    if (settings?.loyalty_points_per_order != null) setPointsPerOrder(settings.loyalty_points_per_order);
+    if (settings?.loyalty_points_value != null) setPointsValue(settings.loyalty_points_value);
   }, [settings]);
 
   const handleSave = async () => {
@@ -49,6 +53,19 @@ export const LoyaltySettings = () => {
       toast.success(t("settingsSaved"));
     } catch (error) {
       console.error("Failed to save loyalty settings:", error);
+      toast.error(language === "bn" ? "সেটিংস সংরক্ষণ করতে ব্যর্থ হয়েছে" : "Failed to save settings");
+    }
+  };
+
+  const handleSaveBanner = async () => {
+    try {
+      await Promise.all([
+        updateSetting.mutateAsync({ key: "loyalty_points_per_order", value: pointsPerOrder }),
+        updateSetting.mutateAsync({ key: "loyalty_points_value", value: pointsValue }),
+      ]);
+      toast.success(t("settingsSaved"));
+    } catch (error) {
+      console.error("Failed to save banner settings:", error);
       toast.error(language === "bn" ? "সেটিংস সংরক্ষণ করতে ব্যর্থ হয়েছে" : "Failed to save settings");
     }
   };
@@ -221,6 +238,69 @@ export const LoyaltySettings = () => {
 
           <Button 
             onClick={handleSave} 
+            disabled={updateSetting.isPending}
+            className="w-full sm:w-auto"
+          >
+            {updateSetting.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="mr-2 h-4 w-4" />
+            )}
+            {t("saveChanges")}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Banner Display Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Star className="h-5 w-5" />
+            {language === "bn" ? "হোম ব্যানার প্রদর্শন" : "Home Banner Display"}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            {language === "bn"
+              ? "হোমপেজে লয়্যালটি ব্যানারে যে তথ্য দেখানো হবে তা নির্ধারণ করুন।"
+              : "Set the values displayed in the loyalty banner on the homepage."}
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label>{language === "bn" ? "প্রতি অর্ডারে পয়েন্ট (ব্যানারে দেখানো হবে)" : "Points per Order (shown in banner)"}</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  min={0}
+                  value={pointsPerOrder}
+                  onChange={(e) => setPointsPerOrder(Number(e.target.value))}
+                />
+                <span className="text-muted-foreground text-sm">{language === "bn" ? "পয়েন্ট" : "pts"}</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {language === "bn" ? "ব্যানারে স্টার আইকনের পাশে এই সংখ্যা দেখানো হবে" : "This number appears next to the star icon in the banner"}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>{language === "bn" ? "টাকার পরিমাণ (ব্যানারে দেখানো হবে)" : "Taka Amount (shown in banner)"}</Label>
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">৳</span>
+                <Input
+                  type="number"
+                  min={0}
+                  value={pointsValue}
+                  onChange={(e) => setPointsValue(Number(e.target.value))}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {language === "bn" ? `ব্যানারে দেখাবে: ${pointsValue} টাকা = ${earnRatio} পয়েন্ট` : `Banner will show: ${pointsValue} Taka = ${earnRatio} Points`}
+              </p>
+            </div>
+          </div>
+
+          <Button
+            onClick={handleSaveBanner}
             disabled={updateSetting.isPending}
             className="w-full sm:w-auto"
           >
