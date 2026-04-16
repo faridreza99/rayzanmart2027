@@ -404,6 +404,18 @@ async function handleProfitLossSelect(params: Record<string, string>, res: any) 
   return res.json(result.rows);
 }
 
+function serializeCol(col: string, v: any, jsonbCols: Set<string>): any {
+  if (v == null) return v;
+  if (jsonbCols.has(col)) {
+    if (typeof v === "string") {
+      try { JSON.parse(v); return v; } catch { return JSON.stringify(v); }
+    }
+    return JSON.stringify(v);
+  }
+  if (typeof v === "object" && !Array.isArray(v)) return JSON.stringify(v);
+  return v;
+}
+
 function generateOrderNumber(): string {
   const now = Date.now();
   const timePart = now.toString(36).toUpperCase().slice(-6);
@@ -495,14 +507,7 @@ async function handleInsert(table: string, body: any, userId: string | null, res
     if (cols.length === 0) continue;
     const placeholders = cols.map((_, i) => `$${i + 1}`).join(", ");
     const colStr = cols.map(c => `"${c}"`).join(", ");
-    const vals = cols.map(c => {
-      const v = row[c];
-      if (typeof v === "object" && v !== null && !Array.isArray(v)) return JSON.stringify(v);
-      if (jsonbCols.has(c) && typeof v === "string") {
-        try { JSON.parse(v); return v; } catch { return JSON.stringify(v); }
-      }
-      return v;
-    });
+    const vals = cols.map(c => serializeCol(c, row[c], jsonbCols));
 
     const result = await query(
       `INSERT INTO "${table}" (${colStr}) VALUES (${placeholders}) RETURNING *`,
@@ -689,14 +694,7 @@ async function handleUpdate(table: string, body: any, params: Record<string, str
 
   const jsonbCols = await getJsonbCols(table);
   const sets = updateCols.map((c, i) => `"${c}" = $${i + 1}`).join(", ");
-  const setVals = updateCols.map(c => {
-    const v = body[c];
-    if (typeof v === "object" && v !== null && !Array.isArray(v)) return JSON.stringify(v);
-    if (jsonbCols.has(c) && typeof v === "string") {
-      try { JSON.parse(v); return v; } catch { return JSON.stringify(v); }
-    }
-    return v;
-  });
+  const setVals = updateCols.map(c => serializeCol(c, body[c], jsonbCols));
 
   const { clause, values: whereVals } = buildWhere(params, updateCols.length + 1);
   const sql = `UPDATE "${table}" SET ${sets} ${clause} RETURNING *`;
@@ -825,15 +823,7 @@ async function handleUpsert(table: string, body: any, params: Record<string, str
     const placeholders = cols.map((_, i) => `$${i + 1}`).join(", ");
     const colStr = cols.map(c => `"${c}"`).join(", ");
     const setStr = cols.filter(c => c !== conflictCol).map(c => `"${c}" = EXCLUDED."${c}"`).join(", ");
-    const vals = cols.map(c => {
-      const v = row[c];
-      if (typeof v === "object" && v !== null && !Array.isArray(v)) return JSON.stringify(v);
-      // For JSONB columns, strings must be valid JSON — wrap plain strings in JSON quotes
-      if (jsonbCols.has(c) && typeof v === "string") {
-        try { JSON.parse(v); return v; } catch { return JSON.stringify(v); }
-      }
-      return v;
-    });
+    const vals = cols.map(c => serializeCol(c, row[c], jsonbCols));
 
     const sql = `INSERT INTO "${table}" (${colStr}) VALUES (${placeholders})
                  ON CONFLICT ("${conflictCol}") DO UPDATE SET ${setStr} RETURNING *`;
