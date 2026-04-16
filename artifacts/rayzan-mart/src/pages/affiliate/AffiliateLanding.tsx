@@ -1,20 +1,13 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
-import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { CheckCircle2, Phone, Loader2 } from "lucide-react";
+import { CheckCircle2, Phone, Loader2, Star } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { useAffiliateFAQs } from "@/hooks/useFAQs";
 import { useTestimonials } from "@/hooks/useTestimonials";
@@ -117,53 +110,86 @@ const AffiliateLanding = () => {
         </section>
 
         {/* Success Stories Section */}
-        <section className="py-16 lg:py-24">
-          <div className="container text-center">
-            <h2 className="mb-4 text-3xl font-bold lg:text-4xl text-slate-900">
-              {c("success_stories", "heading", {
-                bn: "আমাদের সাথে পথচলা — সাধারণ মানুষ থেকে সফল আয়ের গল্প",
-                en: "A Journey With Us — From Ordinary People to Successful Earners",
-              })}
-            </h2>
-            <p className="mb-12 text-lg text-slate-600">
-              {c("success_stories", "subheading", {
-                bn: "অনেকে ছোট পরিমাণ দিয়ে শুরু করেছিল",
-                en: "Many started small and now earn regularly.",
-              })}
-            </p>
+        {!testimonialsLoading && activeTestimonials.length > 0 && (
+          <section className="py-16 bg-white">
+            <div className="container mx-auto px-4">
+              <div className="mb-10 text-center">
+                <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+                  {c("success_stories", "heading", {
+                    bn: "আমাদের সাথে পথচলা",
+                    en: "Stories From Our Community",
+                  })}
+                </h2>
+                <p className="mt-4 text-lg text-slate-500">
+                  {c("success_stories", "subheading", {
+                    bn: "আমাদের অ্যাফিলিয়েটদের সাফল্যের গল্প",
+                    en: "Success stories from our affiliates",
+                  })}
+                </p>
+              </div>
 
-            {testimonialsLoading ? (
-               <div className="flex justify-center">
-                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
-               </div>
-            ) : activeTestimonials.length > 0 ? (
-              <Carousel className="mx-auto max-w-5xl">
-                <CarouselContent>
-                  {activeTestimonials.map((story, i) => (
-                    <CarouselItem key={i} className="md:basis-1/2 lg:basis-1/3 p-4">
-                      <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-100 h-full flex flex-col items-center card-hover text-center">
-                        <img 
-                          src={story.image || "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop"} 
-                          alt={story.name?.[language] || "Testimonial"} 
-                          className="mb-4 h-24 w-24 rounded-full object-cover border-4 border-orange-50" 
-                        />
-                        <h3 className="text-xl font-bold text-slate-900">{story.name?.[language] || "Success Story"}</h3>
-                        <p className="text-primary font-medium">{story.role?.[language] || "Partner"}</p>
-                        <div className="mt-4 rounded-full bg-orange-50 px-4 py-2 font-bold text-primary">
-                          {story.income?.[language] || "Earned Regularly"}
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                {activeTestimonials.map((t) => {
+                  const nameStr = typeof t.name === "object"
+                    ? (t.name[language as "bn" | "en"] || t.name.en || t.name.bn || "")
+                    : (t.name as string);
+                  const roleStr = typeof t.role === "object"
+                    ? (t.role[language as "bn" | "en"] || t.role.en || "")
+                    : "";
+                  const storyStr = typeof t.story === "object"
+                    ? (t.story[language as "bn" | "en"] || t.story.en || "")
+                    : "";
+                  const incomeStr = typeof t.income === "object"
+                    ? (t.income[language as "bn" | "en"] || "")
+                    : "";
+                  const initials = nameStr.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase();
+
+                  return (
+                    <div
+                      key={t.id}
+                      className="rounded-2xl border border-slate-100 bg-slate-50 p-6 shadow-sm flex flex-col gap-4"
+                    >
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: t.rating || 5 }).map((_, i) => (
+                          <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        ))}
+                      </div>
+
+                      <p className="text-slate-700 leading-relaxed flex-1">
+                        "{storyStr}"
+                      </p>
+
+                      {incomeStr && (
+                        <div className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                          {language === "bn" ? "আয়: " : "Income: "}
+                          {incomeStr}
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-3 pt-2 border-t border-slate-200">
+                        {t.image ? (
+                          <img
+                            src={t.image}
+                            alt={nameStr}
+                            className="h-10 w-10 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                            {initials}
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-semibold text-slate-900">{nameStr}</p>
+                          <p className="text-sm text-slate-500">{roleStr}</p>
                         </div>
                       </div>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <CarouselPrevious className="hidden md:flex" />
-                <CarouselNext className="hidden md:flex" />
-              </Carousel>
-            ) : (
-              <p className="text-muted-foreground italic">Testimonials update coming soon...</p>
-            )}
-          </div>
-        </section>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Mid CTA Section */}
         <section className="bg-primary py-12 text-primary-foreground">
