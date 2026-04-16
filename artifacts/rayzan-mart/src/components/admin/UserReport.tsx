@@ -34,7 +34,6 @@ import {
   RefreshCw,
   Eye,
   EyeOff,
-  Pencil,
   ShoppingBag,
   Wallet,
   Gift,
@@ -515,142 +514,133 @@ export const UserReport = () => {
           </div>
 
           {/* ── Table ── */}
-          <div className="rounded-md border overflow-auto">
-            <Table>
+          <div className="rounded-md border overflow-x-auto">
+            <Table className="min-w-[900px]">
               <TableHeader>
                 <TableRow className="bg-muted/40">
-                  <TableHead className="w-10">#</TableHead>
-                  <TableHead>{bn ? "নাম" : "Name"}</TableHead>
-                  <TableHead>{bn ? "ইমেইল" : "Email"}</TableHead>
-                  <TableHead>{bn ? "ফোন" : "Phone"}</TableHead>
-                  <TableHead>{bn ? "পাসওয়ার্ড" : "Password"}</TableHead>
-                  <TableHead className="text-center">{bn ? "অর্ডার" : "Orders"}</TableHead>
-                  <TableHead className="text-right">{bn ? "মোট ব্যয়" : "Spent"}</TableHead>
-                  <TableHead className="text-right">{bn ? "অ্যাফি. আয়" : "Aff. Earned"}</TableHead>
-                  <TableHead className="text-right">{bn ? "পেন্ডিং" : "Pending"}</TableHead>
-                  <TableHead className="text-right">{bn ? "পেইড" : "Paid"}</TableHead>
-                  <TableHead className="text-right">{bn ? "লয়্যালটি পয়েন্ট" : "Loyalty Pts"}</TableHead>
-                  <TableHead>{bn ? "সর্বশেষ লগইন" : "Last Login"}</TableHead>
-                  <TableHead className="text-center">{bn ? "লগ" : "Logs"}</TableHead>
+                  <TableHead className="w-8 px-2 text-xs whitespace-nowrap">#</TableHead>
+                  <TableHead className="text-xs whitespace-nowrap min-w-[130px]">{bn ? "নাম" : "Name"}</TableHead>
+                  <TableHead className="text-xs whitespace-nowrap min-w-[160px]">{bn ? "ইমেইল" : "Email"}</TableHead>
+                  <TableHead className="text-xs whitespace-nowrap">{bn ? "ফোন" : "Phone"}</TableHead>
+                  <TableHead className="text-center text-xs whitespace-nowrap">{bn ? "অর্ডার" : "Orders"}</TableHead>
+                  <TableHead className="text-right text-xs whitespace-nowrap">{bn ? "মোট ব্যয়" : "Spent"}</TableHead>
+                  <TableHead className="text-right text-xs whitespace-nowrap">{bn ? "অ্যাফি. আয়" : "Aff. Earned"}</TableHead>
+                  <TableHead className="text-right text-xs whitespace-nowrap">{bn ? "পেন্ডিং" : "Pending"}</TableHead>
+                  <TableHead className="text-right text-xs whitespace-nowrap">{bn ? "পেইড" : "Paid"}</TableHead>
+                  <TableHead className="text-right text-xs whitespace-nowrap">{bn ? "পয়েন্ট" : "Points"}</TableHead>
+                  <TableHead className="text-xs whitespace-nowrap">{bn ? "সর্বশেষ লগইন" : "Last Login"}</TableHead>
+                  <TableHead className="text-center text-xs whitespace-nowrap">{bn ? "কার্যক্রম" : "Actions"}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {usersQ.isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={13} className="text-center py-12 text-muted-foreground">
+                    <TableCell colSpan={12} className="text-center py-12 text-muted-foreground">
                       <RefreshCw className="h-5 w-5 animate-spin mx-auto mb-2" />
                       {bn ? "লোড হচ্ছে..." : "Loading..."}
                     </TableCell>
                   </TableRow>
                 ) : usersQ.isError ? (
                   <TableRow>
-                    <TableCell colSpan={13} className="text-center py-12 text-red-500">
+                    <TableCell colSpan={12} className="text-center py-12 text-red-500">
                       <AlertCircle className="h-5 w-5 mx-auto mb-2" />
                       {bn ? "ডেটা লোড করতে ব্যর্থ হয়েছে।" : "Failed to load data."}
                     </TableCell>
                   </TableRow>
                 ) : (usersQ.data?.users || []).length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={13} className="text-center py-12 text-muted-foreground">
+                    <TableCell colSpan={12} className="text-center py-12 text-muted-foreground">
                       {bn ? "কোনো ডেটা পাওয়া যায়নি।" : "No data found."}
                     </TableCell>
                   </TableRow>
                 ) : (
                   (usersQ.data?.users || []).map((u, i) => (
-                    <TableRow key={u.id} className="hover:bg-muted/20 text-sm">
-                      <TableCell className="text-muted-foreground text-xs">
+                    <TableRow key={u.id} className="hover:bg-muted/20 text-xs">
+                      <TableCell className="text-muted-foreground px-2">
                         {(page - 1) * PAGE_SIZE + i + 1}
                       </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">
+                      <TableCell className="py-2">
+                        <div className="flex items-center gap-1.5">
+                          <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
                             {(u.name || u.email)?.[0]?.toUpperCase() || "?"}
                           </div>
-                          <div>
-                            <p className="font-medium leading-tight">{u.name || "—"}</p>
+                          <div className="min-w-0">
+                            <p className="font-medium leading-tight truncate max-w-[110px]">{u.name || "—"}</p>
                             {u.is_blocked && (
                               <span className="text-[10px] text-red-500">{bn ? "ব্লকড" : "Blocked"}</span>
                             )}
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="text-muted-foreground">{u.email}</TableCell>
-                      <TableCell className="text-muted-foreground">{u.phone || "—"}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-mono tracking-widest text-muted-foreground select-none text-sm">
-                            ••••••••
-                          </span>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
-                            title={bn ? "পাসওয়ার্ড পরিবর্তন" : "Change Password"}
-                            onClick={() => {
-                              setPwUser(u);
-                              setNewPw("");
-                              setShowPw(false);
-                              setPwOpen(true);
-                            }}
-                          >
-                            <Pencil className="h-3 w-3" />
-                          </Button>
-                        </div>
+                      <TableCell className="text-muted-foreground py-2">
+                        <span className="block truncate max-w-[160px]" title={u.email}>{u.email}</span>
                       </TableCell>
-                      <TableCell className="text-center">
-                        <Badge variant="secondary">{u.total_orders}</Badge>
+                      <TableCell className="text-muted-foreground py-2 whitespace-nowrap">{u.phone || "—"}</TableCell>
+                      <TableCell className="text-center py-2">
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{u.total_orders}</Badge>
                       </TableCell>
-                      <TableCell className="text-right font-medium">{money(u.total_spent)}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="space-y-0.5">
-                          <p className="font-medium text-blue-700">{money(u.affiliate_total_commission)}</p>
+                      <TableCell className="text-right font-medium py-2 whitespace-nowrap">{money(u.total_spent)}</TableCell>
+                      <TableCell className="text-right py-2">
+                        <div>
+                          <p className="font-medium text-blue-700 whitespace-nowrap">{money(u.affiliate_total_commission)}</p>
                           {u.affiliate_status && (
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${affiliateStatusColor[u.affiliate_status] || "bg-gray-100 text-gray-600"}`}>
+                            <span className={`text-[10px] px-1 py-0.5 rounded-full font-medium ${affiliateStatusColor[u.affiliate_status] || "bg-gray-100 text-gray-600"}`}>
                               {u.affiliate_status}
                             </span>
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="text-right font-medium text-yellow-700">
+                      <TableCell className="text-right font-medium text-yellow-700 py-2 whitespace-nowrap">
                         {parseFloat(u.affiliate_pending_commission) > 0
                           ? money(u.affiliate_pending_commission)
-                          : <span className="text-muted-foreground text-xs">—</span>
+                          : <span className="text-muted-foreground">—</span>
                         }
                       </TableCell>
-                      <TableCell className="text-right font-medium text-green-700">
+                      <TableCell className="text-right font-medium text-green-700 py-2 whitespace-nowrap">
                         {parseFloat(u.affiliate_paid_commission) > 0
                           ? money(u.affiliate_paid_commission)
-                          : <span className="text-muted-foreground text-xs">—</span>
+                          : <span className="text-muted-foreground">—</span>
                         }
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right py-2">
                         <div>
                           <p className="font-medium text-purple-700">{pts(u.loyalty_points)}</p>
                           {parseFloat(u.loyalty_amount_earned) > 0 && (
-                            <p className="text-[10px] text-muted-foreground">{money(u.loyalty_amount_earned)}</p>
+                            <p className="text-[10px] text-muted-foreground whitespace-nowrap">{money(u.loyalty_amount_earned)}</p>
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                      <TableCell className="text-muted-foreground py-2">
                         {u.last_login ? (
-                          <div>
+                          <div className="whitespace-nowrap">
                             <p>{dt(u.last_login)}</p>
                             <p className="text-[10px]">{bn ? "লগইন:" : "Logins:"} {u.login_count}</p>
                           </div>
                         ) : (
-                          <span className="italic">{bn ? "কোনো লগইন নেই" : "No login"}</span>
+                          <span className="italic whitespace-nowrap">{bn ? "লগইন নেই" : "No login"}</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-center">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 w-7 p-0"
-                          title={bn ? "লগইন ইতিহাস" : "Login History"}
-                          onClick={() => { setSelected(u); setLogsOpen(true); }}
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                        </Button>
+                      <TableCell className="text-center py-2">
+                        <div className="flex items-center justify-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-primary"
+                            title={bn ? "পাসওয়ার্ড পরিবর্তন" : "Change Password"}
+                            onClick={() => { setPwUser(u); setNewPw(""); setShowPw(false); setPwOpen(true); }}
+                          >
+                            <KeyRound className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-primary"
+                            title={bn ? "লগইন ইতিহাস" : "Login History"}
+                            onClick={() => { setSelected(u); setLogsOpen(true); }}
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
