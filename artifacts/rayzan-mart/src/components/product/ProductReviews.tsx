@@ -4,7 +4,6 @@
  import { Textarea } from "@/components/ui/textarea";
  import { useLanguage } from "@/contexts/LanguageContext";
  import { useAuth } from "@/contexts/AuthContext";
- import { useMyOrders } from "@/hooks/useOrders";
  import { useCreateProductReview, useProductReviews } from "@/hooks/useProductReviews";
  import { toast } from "sonner";
  
@@ -17,21 +16,13 @@
  export const ProductReviews = ({ productId, productRating, reviewCount }: ProductReviewsProps) => {
    const { language, t } = useLanguage();
    const { isAuthenticated, user } = useAuth();
-   const { data: myOrders } = useMyOrders();
    const { data: reviews = [], isLoading } = useProductReviews(productId);
    const createReview = useCreateProductReview();
    const [newReview, setNewReview] = useState("");
    const [selectedRating, setSelectedRating] = useState(5);
 
-   const deliveredOrdersForProduct = useMemo(() => {
-     return (myOrders || []).filter((order) =>
-       order.status === "delivered" &&
-       (order.order_items || []).some((item) => item.product_id === productId)
-     );
-   }, [myOrders, productId]);
-
    const userAlreadyReviewed = !!reviews.find((r: any) => r.user_id === user?.id);
-   const canReview = isAuthenticated && deliveredOrdersForProduct.length > 0 && !userAlreadyReviewed;
+   const canReview = isAuthenticated && !userAlreadyReviewed;
 
    const reviewStats = useMemo(() => {
      const count = reviews.length;
@@ -51,12 +42,8 @@
        toast.error(t("loginToReview"));
        return;
      }
-     if (!canReview) {
-       toast.error(
-         language === "bn"
-           ? "রিভিউ দিতে হলে ডেলিভার্ড অর্ডার থাকতে হবে"
-           : "You can review only after delivered purchase"
-       );
+     if (userAlreadyReviewed) {
+       toast.error(language === "bn" ? "আপনি ইতোমধ্যে এই পণ্যে রিভিউ দিয়েছেন" : "You already reviewed this product");
        return;
      }
      if (!newReview.trim()) {
@@ -66,7 +53,7 @@
      try {
        await createReview.mutateAsync({
          productId,
-         orderId: deliveredOrdersForProduct[0]?.id || null,
+         orderId: null,
          rating: selectedRating,
          comment: newReview.trim(),
        });
@@ -129,10 +116,8 @@
          {!canReview && (
            <p className="mb-3 text-sm text-muted-foreground">
              {!isAuthenticated
-               ? (language === "bn" ? "রিভিউ দিতে লগইন করুন" : "Login to submit review")
-               : userAlreadyReviewed
-                 ? (language === "bn" ? "আপনি ইতোমধ্যে এই পণ্যে রিভিউ দিয়েছেন" : "You already reviewed this product")
-                 : (language === "bn" ? "রিভিউ দিতে পণ্যটি ডেলিভার্ড হতে হবে" : "Review is available after delivered order")}
+               ? (language === "bn" ? "রিভিউ দিতে লগইন করুন" : "Login to submit a review")
+               : (language === "bn" ? "আপনি ইতোমধ্যে এই পণ্যে রিভিউ দিয়েছেন" : "You already reviewed this product")}
            </p>
          )}
          <div className="mb-3 flex items-center gap-2">
