@@ -679,6 +679,7 @@ async function handleInsert(table: string, body: any, userId: string | null, res
     // ─────────────────────────────────────────────────────────────────────────
   }
 
+  invalidateTable(table);
   return res.json(inserted.length === 1 ? inserted[0] : inserted);
 }
 
@@ -773,6 +774,7 @@ async function handleUpdate(table: string, body: any, params: Record<string, str
     }
   }
 
+  invalidateTable(table);
   return res.json(result.rows);
 }
 
@@ -831,6 +833,7 @@ async function handleUpsert(table: string, body: any, params: Record<string, str
     upserted.push(result.rows[0]);
   }
 
+  invalidateTable(table);
   return res.json(upserted.length === 1 ? upserted[0] : upserted);
 }
 
@@ -839,6 +842,7 @@ async function handleDelete(table: string, params: Record<string, string>, userI
   if (!clause) return res.status(400).json({ error: "DELETE requires at least one filter" });
   const sql = `DELETE FROM "${table}" ${clause} RETURNING *`;
   const result = await query(sql, values);
+  invalidateTable(table);
   return res.json(result.rows);
 }
 
