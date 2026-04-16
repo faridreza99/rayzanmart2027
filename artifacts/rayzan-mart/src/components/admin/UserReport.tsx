@@ -472,10 +472,11 @@ export const UserReport = () => {
             {bn ? "কাস্টমার ডেটা রিপোর্ট" : "Customer Data Report"}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-wrap gap-3 items-end">
+        <CardContent className="space-y-3">
+          {/* Row 1: Search + Dates + Action buttons */}
+          <div className="flex flex-wrap gap-2 items-end">
             {/* Search */}
-            <div className="flex-1 min-w-[200px]">
+            <div className="flex-1 min-w-[180px]">
               <p className="text-xs text-muted-foreground mb-1">
                 {bn ? "নাম / ইমেইল / ফোন" : "Name / Email / Phone"}
               </p>
@@ -492,50 +493,50 @@ export const UserReport = () => {
             </div>
 
             {/* Date From */}
-            <div className="min-w-[150px]">
+            <div className="min-w-[140px]">
               <p className="text-xs text-muted-foreground mb-1">{bn ? "তারিখ থেকে" : "Date From"}</p>
-              <Input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(1); }} />
+              <Input type="date" className="h-9 text-sm" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(1); }} />
             </div>
 
             {/* Date To */}
-            <div className="min-w-[150px]">
+            <div className="min-w-[140px]">
               <p className="text-xs text-muted-foreground mb-1">{bn ? "তারিখ পর্যন্ত" : "Date To"}</p>
-              <Input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(1); }} />
+              <Input type="date" className="h-9 text-sm" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(1); }} />
             </div>
 
-            <Button onClick={() => { setPage(1); usersQ.refetch(); }}>
-              <Search className="mr-1.5 h-4 w-4" />
+            <Button size="sm" onClick={() => { setPage(1); usersQ.refetch(); }}>
+              <Search className="mr-1.5 h-3.5 w-3.5" />
               {bn ? "খুঁজুন" : "Search"}
             </Button>
 
-            <Button
-              variant="outline"
-              onClick={() => { setSearch(""); setDateFrom(""); setDateTo(""); setPage(1); }}
-            >
-              <RefreshCw className="mr-1.5 h-4 w-4" />
+            <Button size="sm" variant="outline" onClick={() => { setSearch(""); setDateFrom(""); setDateTo(""); setPage(1); }}>
+              <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
               {bn ? "রিসেট" : "Reset"}
             </Button>
+          </div>
 
-            <div className="flex gap-2 ml-auto">
-              <Button
-                variant="outline"
-                onClick={exportExcel}
-                disabled={usersQ.isLoading}
-                className="border-green-500 text-green-700 hover:bg-green-50"
-              >
-                <FileSpreadsheet className="mr-1.5 h-4 w-4" />
-                {bn ? "Excel ডাউনলোড" : "Download Excel"}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={exportPDF}
-                disabled={usersQ.isLoading}
-                className="border-red-400 text-red-700 hover:bg-red-50"
-              >
-                <FileText className="mr-1.5 h-4 w-4" />
-                {bn ? "PDF ডাউনলোড" : "Download PDF"}
-              </Button>
-            </div>
+          {/* Row 2: Export buttons */}
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={exportExcel}
+              disabled={usersQ.isLoading}
+              className="border-green-500 text-green-700 hover:bg-green-50"
+            >
+              <FileSpreadsheet className="mr-1.5 h-4 w-4" />
+              {bn ? "Excel ডাউনলোড" : "Download Excel"}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={exportPDF}
+              disabled={usersQ.isLoading}
+              className="border-red-400 text-red-700 hover:bg-red-50"
+            >
+              <FileText className="mr-1.5 h-4 w-4" />
+              {bn ? "PDF ডাউনলোড" : "Download PDF"}
+            </Button>
           </div>
 
           {/* ── Table ── */}
