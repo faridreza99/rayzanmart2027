@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Gift, Star, ArrowRight } from "lucide-react";
+import { Gift, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -38,19 +38,15 @@ export const LoyaltyBanner = () => {
 
           <div className="flex items-center gap-6">
             <div className="text-center">
-              <div className="flex items-center gap-1 text-2xl font-bold text-primary">
-                <Star className="h-5 w-5 fill-primary" />
-                {pointsPerOrder}
-              </div>
-              <p className="text-xs text-muted-foreground">{t("pointsPerOrder")}</p>
-            </div>
-            <div className="h-10 w-px bg-border" />
-            <div className="text-center">
-              <div className="text-2xl font-bold text-primary">{pointsValue}</div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm font-semibold text-primary">
                 {language === "bn"
-                  ? `টাকা = ${earnRatio} পয়েন্ট`
-                  : `Taka = ${earnRatio} Points`}
+                  ? `প্রতি ${pointsValue} টাকায় ${earnRatio > 0 ? Math.round(pointsValue / earnRatio) : 1} পয়েন্ট অর্জন করুন`
+                  : `Earn ${earnRatio > 0 ? Math.round(pointsValue / earnRatio) : 1} point for every ৳${pointsValue} spent`}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {language === "bn"
+                  ? `${pointsValue * pointsPerOrder} টাকায় ${pointsPerOrder} পয়েন্ট পাবেন`
+                  : `Get ${pointsPerOrder} points on ৳${pointsValue * pointsPerOrder} purchase`}
               </p>
             </div>
             {!isAuthenticated && (
