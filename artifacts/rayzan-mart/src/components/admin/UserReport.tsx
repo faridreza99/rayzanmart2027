@@ -473,9 +473,8 @@ export const UserReport = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {/* Row 1: Search + Dates + Action buttons */}
+          {/* Row 1: Inputs only */}
           <div className="flex flex-wrap gap-2 items-end">
-            {/* Search */}
             <div className="flex-1 min-w-[180px]">
               <p className="text-xs text-muted-foreground mb-1">
                 {bn ? "নাম / ইমেইল / ফোন" : "Name / Email / Phone"}
@@ -491,32 +490,26 @@ export const UserReport = () => {
                 />
               </div>
             </div>
-
-            {/* Date From */}
-            <div className="min-w-[140px]">
+            <div className="w-[145px]">
               <p className="text-xs text-muted-foreground mb-1">{bn ? "তারিখ থেকে" : "Date From"}</p>
               <Input type="date" className="h-9 text-sm" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(1); }} />
             </div>
-
-            {/* Date To */}
-            <div className="min-w-[140px]">
+            <div className="w-[145px]">
               <p className="text-xs text-muted-foreground mb-1">{bn ? "তারিখ পর্যন্ত" : "Date To"}</p>
               <Input type="date" className="h-9 text-sm" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(1); }} />
             </div>
+          </div>
 
+          {/* Row 2: All action buttons */}
+          <div className="flex flex-wrap gap-2">
             <Button size="sm" onClick={() => { setPage(1); usersQ.refetch(); }}>
               <Search className="mr-1.5 h-3.5 w-3.5" />
               {bn ? "খুঁজুন" : "Search"}
             </Button>
-
             <Button size="sm" variant="outline" onClick={() => { setSearch(""); setDateFrom(""); setDateTo(""); setPage(1); }}>
               <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
               {bn ? "রিসেট" : "Reset"}
             </Button>
-          </div>
-
-          {/* Row 2: Export buttons */}
-          <div className="flex flex-wrap gap-2">
             <Button
               size="sm"
               variant="outline"
@@ -524,7 +517,7 @@ export const UserReport = () => {
               disabled={usersQ.isLoading}
               className="border-green-500 text-green-700 hover:bg-green-50"
             >
-              <FileSpreadsheet className="mr-1.5 h-4 w-4" />
+              <FileSpreadsheet className="mr-1.5 h-3.5 w-3.5" />
               {bn ? "Excel ডাউনলোড" : "Download Excel"}
             </Button>
             <Button
@@ -534,7 +527,7 @@ export const UserReport = () => {
               disabled={usersQ.isLoading}
               className="border-red-400 text-red-700 hover:bg-red-50"
             >
-              <FileText className="mr-1.5 h-4 w-4" />
+              <FileText className="mr-1.5 h-3.5 w-3.5" />
               {bn ? "PDF ডাউনলোড" : "Download PDF"}
             </Button>
           </div>
