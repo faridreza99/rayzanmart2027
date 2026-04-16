@@ -129,6 +129,8 @@ export const toProduct = (p: DBProduct): Product => {
 export const useProducts = (categoryId?: string, includeInactive = false, affiliateOnly = false, searchQuery?: string) => {
   return useQuery({
     queryKey: ["products", categoryId, includeInactive, affiliateOnly, searchQuery],
+    staleTime: 0,
+    refetchOnMount: true,
     queryFn: async () => {
       let query = supabase
         .from("products")
