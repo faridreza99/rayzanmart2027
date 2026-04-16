@@ -133,7 +133,8 @@ export const AffiliatePageContentManagement = () => {
                 </div>
             </div>
 
-            <div className="rounded-md border bg-card">
+            <div className="rounded-md border bg-card overflow-hidden">
+                <div className="overflow-x-auto">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -219,6 +220,8 @@ export const AffiliatePageContentManagement = () => {
                         )}
                     </TableBody>
                 </Table>
+
+                </div>
             </div>
 
             <Dialog open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)}>

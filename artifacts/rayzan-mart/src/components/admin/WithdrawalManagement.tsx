@@ -94,7 +94,8 @@ export const WithdrawalManagement = () => {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <div className="rounded-md border bg-white shadow-sm">
+        <div className="rounded-md border bg-white shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -160,6 +161,7 @@ export const WithdrawalManagement = () => {
               )}
             </TableBody>
           </Table>
+          </div>
         </div>
 
         <DialogContent>

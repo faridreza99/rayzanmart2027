@@ -542,6 +542,7 @@ export const ProductManagement = () => {
           ) : (
             <>
               <div className="border rounded-lg overflow-hidden">
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -640,6 +641,7 @@ export const ProductManagement = () => {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               </div>
 
               {/* Pagination */}

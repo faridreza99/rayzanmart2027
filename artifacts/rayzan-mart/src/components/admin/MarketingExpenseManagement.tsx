@@ -135,6 +135,7 @@ export const MarketingExpenseManagement = () => {
 
       <Card>
         <CardContent className="pt-6">
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -184,6 +185,7 @@ export const MarketingExpenseManagement = () => {
               )}
             </TableBody>
           </Table>
+          </div>
         </CardContent>
       </Card>
 

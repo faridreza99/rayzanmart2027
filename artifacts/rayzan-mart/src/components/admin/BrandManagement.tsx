@@ -234,6 +234,7 @@
              />
            ) : (
              <div className="border rounded-lg overflow-hidden">
+               <div className="overflow-x-auto">
                <Table>
                  <TableHeader className="sticky top-0 bg-background z-10">
                    <TableRow>
@@ -305,6 +306,7 @@
                    ))}
                  </TableBody>
                </Table>
+               </div>
              </div>
            )}
          </CardContent>

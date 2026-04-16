@@ -169,7 +169,8 @@ export const TestimonialManagement = () => {
                 </div>
             </div>
 
-            <div className="rounded-md border bg-card">
+            <div className="rounded-md border bg-card overflow-hidden">
+                <div className="overflow-x-auto">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -253,6 +254,8 @@ export const TestimonialManagement = () => {
                         )}
                     </TableBody>
                 </Table>
+
+                </div>
             </div>
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

@@ -158,7 +158,8 @@ export const FAQManagement = () => {
                 </div>
             </div>
 
-            <div className="rounded-md border bg-card">
+            <div className="rounded-md border bg-card overflow-hidden">
+                <div className="overflow-x-auto">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -227,6 +228,8 @@ export const FAQManagement = () => {
                         )}
                     </TableBody>
                 </Table>
+
+                </div>
             </div>
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

@@ -173,7 +173,8 @@ export const VideoCampaignManagement = () => {
                 </div>
             </div>
 
-            <div className="rounded-md border bg-card">
+            <div className="rounded-md border bg-card overflow-hidden">
+                <div className="overflow-x-auto">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -258,6 +259,8 @@ export const VideoCampaignManagement = () => {
                         )}
                     </TableBody>
                 </Table>
+
+                </div>
             </div>
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
