@@ -129,13 +129,11 @@ export const useAllProductReviews = () => {
 };
 
 export const useCreateProductReview = () => {
-  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
       productId,
-      orderId,
       rating,
       comment,
     }: {
@@ -144,19 +142,18 @@ export const useCreateProductReview = () => {
       rating: number;
       comment: string;
     }) => {
-      if (!user) throw new Error("User not authenticated");
-
-      const { error } = await supabase.from("product_reviews").insert({
-        product_id: productId,
-        user_id: user.id,
-        order_id: orderId || null,
-        rating,
-        comment,
+      const token = localStorage.getItem("rm_auth_token");
+      const res = await fetch(`/api/products/${productId}/reviews`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ rating, comment }),
       });
-
-      if (error) throw error;
-
-      await refreshProductReviewSummary(productId);
+      if (res.status === 409) throw Object.assign(new Error("already_reviewed"), { code: "23505" });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
     },
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ["product-reviews", vars.productId] });

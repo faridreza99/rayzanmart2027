@@ -57,7 +57,9 @@
          rating: selectedRating,
          comment: newReview.trim(),
        });
-       toast.success(t("reviewSubmitted"));
+       toast.success(language === "bn"
+        ? "রিভিউ জমা হয়েছে! অনুমোদনের পর প্রকাশিত হবে।"
+        : "Review submitted! It will appear after admin approval.");
        setNewReview("");
        setSelectedRating(5);
      } catch (error: any) {

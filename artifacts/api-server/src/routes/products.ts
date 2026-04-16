@@ -187,10 +187,33 @@ router.post("/products/:id/reviews", async (req, res): Promise<void> => {
   const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const parsed = CreateProductReviewBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+
+  // Check for duplicate review
+  const existing = await db.select({ id: productReviewsTable.id })
+    .from(productReviewsTable)
+    .where(and(eq(productReviewsTable.productId, id), eq(productReviewsTable.userId, user.id)));
+  if (existing.length > 0) {
+    res.status(409).json({ error: "already_reviewed" });
+    return;
+  }
+
   const [review] = await db.insert(productReviewsTable).values({
     productId: id, userId: user.id, rating: parsed.data.rating,
-    comment: parsed.data.comment, orderId: parsed.data.orderId
+    comment: parsed.data.comment, orderId: parsed.data.orderId ?? null
   }).returning();
+
+  // Recalculate product rating + review count from approved reviews
+  const allReviews = await db.select({ rating: productReviewsTable.rating })
+    .from(productReviewsTable)
+    .where(and(eq(productReviewsTable.productId, id), eq(productReviewsTable.isApproved, true)));
+  const reviewCount = allReviews.length;
+  const avgRating = reviewCount > 0
+    ? Number((allReviews.reduce((s, r) => s + Number(r.rating), 0) / reviewCount).toFixed(1))
+    : 0;
+  await db.update(productsTable)
+    .set({ rating: String(avgRating), reviewsCount: reviewCount })
+    .where(eq(productsTable.id, id));
+
   res.status(201).json({
     id: review.id, productId: review.productId, userId: review.userId, orderId: review.orderId,
     rating: review.rating, comment: review.comment, isApproved: review.isApproved ?? false,
