@@ -193,35 +193,47 @@ export const Header = () => {
     <header className="sticky top-0 z-50 w-full border-b bg-card shadow-sm">
       {/* Top bar */}
       <div className="bg-primary text-primary-foreground">
-        <div className="container flex h-8 items-center justify-between gap-2 text-xs sm:text-sm">
-          {/* Site name — hidden on mobile (main header already shows logo) */}
-          <Link to="/" className="hidden sm:flex items-center gap-1.5 min-w-0 shrink-0">
-            {settings?.site_logo?.url ? (
-              <img
-                src={settings.site_logo.url}
-                alt={siteName}
-                className="h-4 sm:h-5 w-auto object-contain"
-              />
-            ) : null}
-            <span className="font-bold text-primary-foreground">{siteName}</span>
-          </Link>
+        <div className="container flex h-8 items-center justify-between text-xs sm:text-sm">
+          {/* LEFT: site name on desktop / affiliate link on mobile */}
+          <div className="flex items-center min-w-0 shrink-0">
+            {/* Site name — desktop only */}
+            <Link to="/" className="hidden sm:flex items-center gap-1.5">
+              {settings?.site_logo?.url ? (
+                <img
+                  src={settings.site_logo.url}
+                  alt={siteName}
+                  className="h-4 sm:h-5 w-auto object-contain"
+                />
+              ) : null}
+              <span className="font-bold text-primary-foreground">{siteName}</span>
+            </Link>
+            {/* Affiliate link — mobile only (left side) */}
+            <Link
+              to="/affiliate-landing"
+              className="sm:hidden hover:underline font-medium text-primary-foreground truncate"
+            >
+              {language === "bn" ? "ঘরে বসে আয়ের সুযোগ" : t("affiliateProgram")}
+            </Link>
+          </div>
 
-          {/* Affiliate link — visible on all screen sizes */}
-          <Link
-            to="/affiliate-landing"
-            className="hover:underline truncate text-primary-foreground font-medium"
-          >
-            {language === "bn" ? "ঘরে বসে আয়ের সুযোগ" : t("affiliateProgram")}
-          </Link>
-
-          {/* Language toggle */}
-          <button
-            onClick={() => setLanguage(language === "bn" ? "en" : "bn")}
-            className="flex items-center gap-1 hover:underline whitespace-nowrap shrink-0"
-          >
-            <Globe className="h-3 w-3 sm:h-4 sm:w-4" />
-            {language === "bn" ? "English" : "বাংলা"}
-          </button>
+          {/* RIGHT: affiliate link (desktop) + language toggle */}
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+            {/* Affiliate link — desktop only (grouped on right, original position) */}
+            <Link
+              to="/affiliate-landing"
+              className="hidden sm:inline hover:underline text-primary-foreground"
+            >
+              {t("affiliateProgram")}
+            </Link>
+            {/* Language toggle — always visible */}
+            <button
+              onClick={() => setLanguage(language === "bn" ? "en" : "bn")}
+              className="flex items-center gap-1 hover:underline whitespace-nowrap"
+            >
+              <Globe className="h-3 w-3 sm:h-4 sm:w-4" />
+              {language === "bn" ? "English" : "বাংলা"}
+            </button>
+          </div>
         </div>
       </div>
 
