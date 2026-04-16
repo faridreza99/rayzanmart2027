@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Save, Settings, Upload, Info, Zap, CreditCard } from "lucide-react";
+import { Loader2, Save, Settings, Upload, Info, Zap, CreditCard, Phone } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSiteSettings, useUpdateSiteSetting } from "@/hooks/useAdminSettings";
 import { FOOTER_PAGES_DEFAULTS, FooterPageItem, FooterPagesSettings } from "@/lib/footer-pages";
@@ -36,6 +36,14 @@ export const SystemSettings = () => {
   const [footerPages, setFooterPages] = useState<FooterPagesSettings>(FOOTER_PAGES_DEFAULTS);
   const [selectedFooterPage, setSelectedFooterPage] = useState<keyof FooterPagesSettings>("about");
 
+  const [contactPhone, setContactPhone] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactAddressBn, setContactAddressBn] = useState("");
+  const [contactAddressEn, setContactAddressEn] = useState("");
+  const [socialFacebook, setSocialFacebook] = useState("");
+  const [socialInstagram, setSocialInstagram] = useState("");
+  const [socialYoutube, setSocialYoutube] = useState("");
+
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [whatsappMessage, setWhatsappMessage] = useState("হ্যালো! আমি একটি প্রোডাক্ট সম্পর্কে জানতে চাই।");
   const [ctaTitleBn, setCtaTitleBn] = useState("আমাদের সাথে পথচলা শুরু করুন");
@@ -63,6 +71,13 @@ export const SystemSettings = () => {
       setPaymentInstructionsBn(settings.payment_settings?.instructions_bn || "");
       setPaymentInstructionsEn(settings.payment_settings?.instructions_en || "");
       setFooterPages({ ...FOOTER_PAGES_DEFAULTS, ...(settings.footer_pages || {}) });
+      setContactPhone(settings.contact_info?.phone || "");
+      setContactEmail(settings.contact_info?.email || "");
+      setContactAddressBn(settings.contact_info?.address_bn || "");
+      setContactAddressEn(settings.contact_info?.address_en || "");
+      setSocialFacebook(settings.social_links?.facebook || "");
+      setSocialInstagram(settings.social_links?.instagram || "");
+      setSocialYoutube(settings.social_links?.youtube || "");
       const s = settings as any;
       const wa = s.whatsapp_number;
       setWhatsappNumber(wa ? String(wa).replace(/"/g, "") : "8801347195345");
@@ -177,6 +192,31 @@ export const SystemSettings = () => {
       await updateSetting.mutateAsync({
         key: "footer_pages",
         value: footerPages,
+      });
+      toast.success(t("settingsSaved"));
+    } catch {
+      toast.error(t("somethingWentWrong"));
+    }
+  };
+
+  const handleSaveContactSocial = async () => {
+    try {
+      await updateSetting.mutateAsync({
+        key: "contact_info",
+        value: {
+          phone: contactPhone,
+          email: contactEmail,
+          address_bn: contactAddressBn,
+          address_en: contactAddressEn,
+        },
+      });
+      await updateSetting.mutateAsync({
+        key: "social_links",
+        value: {
+          facebook: socialFacebook,
+          instagram: socialInstagram,
+          youtube: socialYoutube,
+        },
       });
       toast.success(t("settingsSaved"));
     } catch {
@@ -528,6 +568,89 @@ export const SystemSettings = () => {
           </div>
 
           <Button onClick={handleSaveFooterPages} disabled={updateSetting.isPending}>
+            <Save className="mr-2 h-4 w-4" />
+            {t("saveChanges")}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Contact Info & Social Links */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Phone className="h-5 w-5 text-primary" />
+            {language === "bn" ? "যোগাযোগ তথ্য ও সোশ্যাল লিংক" : "Contact Info & Social Links"}
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            {language === "bn"
+              ? "Footer-এ প্রদর্শিত ফোন, ইমেইল, ঠিকানা এবং সোশ্যাল মিডিয়া লিংক"
+              : "Phone, email, address and social media links shown in the footer"}
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label>{language === "bn" ? "ফোন নম্বর" : "Phone Number"}</Label>
+              <Input
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value)}
+                placeholder="+880 17XXXXXXXX"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{language === "bn" ? "ইমেইল" : "Email"}</Label>
+              <Input
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
+                placeholder="support@example.com"
+              />
+            </div>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label>{language === "bn" ? "ঠিকানা (বাংলা)" : "Address (Bangla)"}</Label>
+              <Input
+                value={contactAddressBn}
+                onChange={(e) => setContactAddressBn(e.target.value)}
+                placeholder="ঢাকা, বাংলাদেশ"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{language === "bn" ? "ঠিকানা (ইংরেজি)" : "Address (English)"}</Label>
+              <Input
+                value={contactAddressEn}
+                onChange={(e) => setContactAddressEn(e.target.value)}
+                placeholder="Dhaka, Bangladesh"
+              />
+            </div>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="space-y-2">
+              <Label>Facebook URL</Label>
+              <Input
+                value={socialFacebook}
+                onChange={(e) => setSocialFacebook(e.target.value)}
+                placeholder="https://facebook.com/..."
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Instagram URL</Label>
+              <Input
+                value={socialInstagram}
+                onChange={(e) => setSocialInstagram(e.target.value)}
+                placeholder="https://instagram.com/..."
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>YouTube URL</Label>
+              <Input
+                value={socialYoutube}
+                onChange={(e) => setSocialYoutube(e.target.value)}
+                placeholder="https://youtube.com/..."
+              />
+            </div>
+          </div>
+          <Button onClick={handleSaveContactSocial} disabled={updateSetting.isPending}>
             <Save className="mr-2 h-4 w-4" />
             {t("saveChanges")}
           </Button>

@@ -20,6 +20,17 @@ export interface SiteSettings {
   };
   flash_sale: { is_active: boolean; end_time: string };
   footer_pages: FooterPagesSettings;
+  contact_info: {
+    phone: string;
+    email: string;
+    address_bn: string;
+    address_en: string;
+  };
+  social_links: {
+    facebook: string;
+    instagram: string;
+    youtube: string;
+  };
   loyalty_rules: {
     enabled: boolean;
     earn_ratio: number;

@@ -18,6 +18,16 @@ export const Footer = () => {
     return language === "bn" ? page.title_bn : page.title_en;
   };
 
+  const contactPhone = settings?.contact_info?.phone || "";
+  const contactEmail = settings?.contact_info?.email || "";
+  const contactAddress = language === "bn"
+    ? settings?.contact_info?.address_bn || ""
+    : settings?.contact_info?.address_en || "";
+
+  const facebookUrl = settings?.social_links?.facebook || "";
+  const instagramUrl = settings?.social_links?.instagram || "";
+  const youtubeUrl = settings?.social_links?.youtube || "";
+
   return (
     <footer className="mt-auto border-t bg-card">
       <div className="container py-12">
@@ -34,15 +44,26 @@ export const Footer = () => {
               {t("footerTagline")}
             </p>
             <div className="flex gap-3">
-              <a href="#" className="text-muted-foreground hover:text-primary">
-                <Facebook className="h-5 w-5" />
-              </a>
-              <a href="#" className="text-muted-foreground hover:text-primary">
-                <Instagram className="h-5 w-5" />
-              </a>
-              <a href="#" className="text-muted-foreground hover:text-primary">
-                <Youtube className="h-5 w-5" />
-              </a>
+              {facebookUrl && (
+                <a href={facebookUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                  <Facebook className="h-5 w-5" />
+                </a>
+              )}
+              {instagramUrl && (
+                <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                  <Instagram className="h-5 w-5" />
+                </a>
+              )}
+              {youtubeUrl && (
+                <a href={youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                  <Youtube className="h-5 w-5" />
+                </a>
+              )}
+              {!facebookUrl && !instagramUrl && !youtubeUrl && (
+                <span className="text-xs text-muted-foreground italic">
+                  {language === "bn" ? "সোশ্যাল লিংক সেট করা হয়নি" : "No social links set"}
+                </span>
+              )}
             </div>
           </div>
 
@@ -108,22 +129,29 @@ export const Footer = () => {
           <div>
             <h4 className="mb-4 font-semibold">{t("contactUs")}</h4>
             <ul className="space-y-3 text-sm">
-              <li className="flex items-center gap-2 text-muted-foreground">
-                <Phone className="h-4 w-4 text-primary" />
-                <span>+880 1234-567890</span>
-              </li>
-              <li className="flex items-center gap-2 text-muted-foreground">
-                <Mail className="h-4 w-4 text-primary" />
-                <span>support@banglashop.com</span>
-              </li>
-              <li className="flex items-start gap-2 text-muted-foreground">
-                <MapPin className="h-4 w-4 mt-0.5 text-primary" />
-                <span>
-                  {language === "bn"
-                    ? "গুলশান-২, ঢাকা-১২১২, বাংলাদেশ"
-                    : "Gulshan-2, Dhaka-1212, Bangladesh"}
-                </span>
-              </li>
+              {contactPhone && (
+                <li className="flex items-center gap-2 text-muted-foreground">
+                  <Phone className="h-4 w-4 text-primary flex-shrink-0" />
+                  <span>{contactPhone}</span>
+                </li>
+              )}
+              {contactEmail && (
+                <li className="flex items-center gap-2 text-muted-foreground">
+                  <Mail className="h-4 w-4 text-primary flex-shrink-0" />
+                  <span>{contactEmail}</span>
+                </li>
+              )}
+              {contactAddress && (
+                <li className="flex items-start gap-2 text-muted-foreground">
+                  <MapPin className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
+                  <span>{contactAddress}</span>
+                </li>
+              )}
+              {!contactPhone && !contactEmail && !contactAddress && (
+                <li className="text-xs text-muted-foreground italic">
+                  {language === "bn" ? "যোগাযোগ তথ্য সেট করা হয়নি" : "Contact info not set"}
+                </li>
+              )}
             </ul>
           </div>
         </div>
@@ -157,7 +185,7 @@ export const Footer = () => {
 
         {/* Copyright */}
         <div className="mt-8 border-t pt-6 text-center text-sm text-muted-foreground">
-          <p>© 2026 {siteName}. {t("allRightsReserved")}</p>
+          <p>© {new Date().getFullYear()} {siteName}. {t("allRightsReserved")}</p>
         </div>
       </div>
     </footer>
