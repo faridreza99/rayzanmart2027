@@ -1,22 +1,33 @@
 import { Router, type IRouter } from "express";
-import healthRouter from "./health";
-import authRouter from "./auth";
-import productsRouter from "./products";
-import categoriesRouter from "./categories";
-import ordersRouter from "./orders";
-import affiliatesRouter from "./affiliates";
-import adminRouter from "./admin";
-import marketingRouter from "./marketing";
+import path from "path";
+import { fileURLToPath } from "url";
+import express from "express";
+import healthRouter from "./health.js";
+import authRouter from "./auth.js";
+import dbRouter from "./db.js";
+import rpcRouter from "./rpc.js";
+import reportsRouter from "./reports.js";
+import uploadRouter from "./upload.js";
+import userReportsRouter from "./user-reports.js";
+import { authMiddleware } from "../middleware/auth.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const UPLOADS_DIR = path.join(__dirname, "../../public/uploads");
 
 const router: IRouter = Router();
 
+// Serve uploaded images as static files at /api/uploads/
+router.use("/uploads", express.static(UPLOADS_DIR));
+
+// Parse JWT token on every request so requireAuth and role checks work
+router.use(authMiddleware);
+
 router.use(healthRouter);
 router.use(authRouter);
-router.use(productsRouter);
-router.use(categoriesRouter);
-router.use(ordersRouter);
-router.use(affiliatesRouter);
-router.use(adminRouter);
-router.use(marketingRouter);
+router.use(dbRouter);
+router.use(rpcRouter);
+router.use("/reports", reportsRouter);
+router.use(uploadRouter);
+router.use(userReportsRouter);
 
 export default router;
