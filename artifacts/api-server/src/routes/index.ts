@@ -10,6 +10,7 @@ import reportsRouter from "./reports.js";
 import uploadRouter from "./upload.js";
 import userReportsRouter from "./user-reports.js";
 import reviewsRouter from "./reviews.js";
+import feedbackRouter from "./feedback.js";
 import { authMiddleware } from "../middleware/auth.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -31,5 +32,6 @@ router.use("/reports", reportsRouter);
 router.use(uploadRouter);
 router.use(userReportsRouter);
 router.use(reviewsRouter);
+router.use(feedbackRouter);
 
 export default router;

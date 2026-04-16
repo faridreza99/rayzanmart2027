@@ -11,6 +11,7 @@ import { FAQSection } from "@/components/home/FAQSection";
 import { FloatingWhatsApp } from "@/components/home/FloatingWhatsApp";
 import { TestimonialsSection } from "@/components/home/TestimonialsSection";
 import { CTASection } from "@/components/home/CTASection";
+import FeedbackSection from "@/components/FeedbackSection";
 
 const Index = () => {
   // Track affiliate referrals from URL params
@@ -27,6 +28,7 @@ const Index = () => {
       <AllProducts />
       <TrustBadges />
       <TestimonialsSection />
+      <FeedbackSection />
       <CTASection />
       <FAQSection />
       <FloatingWhatsApp />

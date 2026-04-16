@@ -43,6 +43,7 @@ import { TestimonialManagement } from "@/components/admin/TestimonialManagement"
 import { VideoCampaignManagement } from "@/components/admin/VideoCampaignManagement";
 import { AffiliatePageContentManagement } from "@/components/admin/AffiliatePageContentManagement";
 import { UserReport } from "@/components/admin/UserReport";
+import { WebsiteFeedbackPanel } from "@/components/admin/WebsiteFeedbackPanel";
 
 const AdminDashboard = () => {
   const { language, t } = useLanguage();
@@ -303,6 +304,7 @@ const AdminDashboard = () => {
       {/* Affiliate Page Content */}
       {activeTab === "affiliate-page-content" && <AffiliatePageContentManagement />}
       {activeTab === "user-report" && <UserReport />}
+      {activeTab === "website-feedback" && <WebsiteFeedbackPanel />}
     </AdminLayout>
   );
 };

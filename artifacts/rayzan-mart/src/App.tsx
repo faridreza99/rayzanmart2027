@@ -31,6 +31,7 @@ const AffiliateProductsPage = lazy(() => import("./pages/affiliate/AffiliateProd
 const AffiliateLanding = lazy(() => import("./pages/affiliate/AffiliateLanding"));
 const AffiliateSignup = lazy(() => import("./pages/affiliate/AffiliateSignup"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const FeedbackPage = lazy(() => import("./pages/FeedbackPage"));
 
 import { useSiteSettings } from "@/hooks/useAdminSettings";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -145,6 +146,7 @@ const App = () => (
                       </ProtectedRoute>
                     }
                   />
+                  <Route path="/feedback" element={<FeedbackPage />} />
                   <Route path="/affiliate-landing" element={<AffiliateLanding />} />
                   <Route path="/affiliate/signup" element={<ProtectedRoute><AffiliateSignup /></ProtectedRoute>} />
                   <Route

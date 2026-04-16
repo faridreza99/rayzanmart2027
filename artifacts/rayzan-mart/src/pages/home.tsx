@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ProductCard from "@/components/ProductCard";
+import FeedbackSection from "@/components/FeedbackSection";
 import { useListBanners, useListProducts, useListCategories } from "@workspace/api-client-react";
 
 export default function HomePage() {
@@ -157,6 +158,9 @@ export default function HomePage() {
           </div>
         </section>
       )}
+
+      {/* Customer Feedback Section */}
+      <FeedbackSection />
 
       {/* Empty state if no products */}
       {featured.length === 0 && newArrivals.length === 0 && (

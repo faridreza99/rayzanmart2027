@@ -102,6 +102,11 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
+                <Link to="/feedback" className="text-muted-foreground hover:text-primary">
+                  {language === "bn" ? "গ্রাহক মতামত" : "Customer Feedback"}
+                </Link>
+              </li>
+              <li>
                 <Link to="/affiliate-landing" className="text-muted-foreground hover:text-primary">
                   {t("affiliateProgram")}
                 </Link>

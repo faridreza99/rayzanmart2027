@@ -51,6 +51,7 @@ const navItems: NavItem[] = [
       { id: "categories", labelKey: "categories" },
       { id: "brands", labelKey: "brandManagement" },
       { id: "reviews", labelKey: "productReviews" },
+      { id: "website-feedback", labelKey: "websiteFeedback" },
     ],
   },
   {

@@ -26,6 +26,7 @@ export const translations = {
     marketingExpenses: "মার্কেটিং খরচ",
     settings: "সেটিংস",
     productReviews: "প্রোডাক্ট রিভিউ",
+    websiteFeedback: "ওয়েবসাইট ফিডব্যাক",
 
     // Product
     price: "মূল্য",
@@ -731,6 +732,7 @@ export const translations = {
     marketingExpenses: "Marketing Expenses",
     settings: "Settings",
     productReviews: "Product Reviews",
+    websiteFeedback: "Website Feedback",
 
     // Product
     price: "Price",
