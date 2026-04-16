@@ -6,6 +6,19 @@ import { uploadToCloudinary, getOptimizedUrl } from "@/lib/cloudinary";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 
+function handleUploadError(error: any, language: string) {
+  if (error?.status === 401) {
+    toast.error(
+      language === "bn"
+        ? "সেশন মেয়াদ শেষ। অনুগ্রহ করে আবার লগইন করুন।"
+        : "Session expired. Please log in again.",
+      { action: { label: language === "bn" ? "লগইন" : "Login", onClick: () => { window.location.href = "/admin/login"; } } }
+    );
+  } else {
+    toast.error(language === "bn" ? "ছবি আপলোড ব্যর্থ হয়েছে" : "Image upload failed");
+  }
+}
+
 interface CloudinaryImageUploadProps {
     label: string;
     value: string;
@@ -54,11 +67,7 @@ export const SingleImageUpload = ({
                 language === "bn" ? "ছবি আপলোড সফল" : "Image uploaded successfully"
             );
         } catch (error) {
-            toast.error(
-                language === "bn"
-                    ? "ছবি আপলোড ব্যর্থ হয়েছে"
-                    : "Image upload failed"
-            );
+            handleUploadError(error, language);
             console.error("Upload error:", error);
         } finally {
             setUploading(false);
@@ -80,11 +89,7 @@ export const SingleImageUpload = ({
                 const result = await uploadToCloudinary(file, setProgress);
                 onChange(result.secure_url);
             } catch (error) {
-                toast.error(
-                    language === "bn"
-                        ? "ছবি আপলোড ব্যর্থ হয়েছে"
-                        : "Image upload failed"
-                );
+                handleUploadError(error, language);
             } finally {
                 setUploading(false);
                 setProgress(0);
@@ -232,11 +237,7 @@ export const GalleryImageUpload = ({
                     : `${urls.length} image(s) uploaded`
             );
         } catch (error) {
-            toast.error(
-                language === "bn"
-                    ? "ছবি আপলোড ব্যর্থ হয়েছে"
-                    : "Image upload failed"
-            );
+            handleUploadError(error, language);
         } finally {
             setUploading(false);
             setProgress(0);

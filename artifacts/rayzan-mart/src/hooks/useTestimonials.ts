@@ -9,6 +9,8 @@ type DBTestimonialRow = {
   role_en: string;
   content_bn: string;
   content_en: string;
+  income_bn: string | null;
+  income_en: string | null;
   avatar_url: string | null;
   rating: number;
   is_active: boolean;
@@ -22,7 +24,7 @@ function dbToTestimonial(row: DBTestimonialRow): any {
     name: { bn: row.name, en: row.name },
     role: { bn: row.role_bn || "", en: row.role_en || "" },
     story: { bn: row.content_bn || "", en: row.content_en || "" },
-    income: { bn: "", en: "" },
+    income: { bn: row.income_bn || "", en: row.income_en || "" },
     image: row.avatar_url || null,
     is_active: row.is_active,
     created_at: row.created_at,
@@ -41,6 +43,10 @@ function testimonialToDB(t: any): Partial<DBTestimonialRow> {
   if (t.story !== undefined) {
     out.content_bn = t.story?.bn ?? "";
     out.content_en = t.story?.en ?? "";
+  }
+  if (t.income !== undefined) {
+    out.income_bn = t.income?.bn ?? "";
+    out.income_en = t.income?.en ?? "";
   }
   if (t.image !== undefined) out.avatar_url = t.image || null;
   if (t.is_active !== undefined) out.is_active = t.is_active;

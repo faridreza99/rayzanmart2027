@@ -9,6 +9,8 @@ interface TestimonialRow {
   role_en: string;
   content_bn: string;
   content_en: string;
+  income_bn: string | null;
+  income_en: string | null;
   avatar_url: string | null;
   rating: number;
   is_active: boolean;
@@ -20,8 +22,10 @@ const STATIC_TESTIMONIALS: TestimonialRow[] = [
     name: "রাহেলা বেগম",
     role_bn: "গৃহিণী, ঢাকা",
     role_en: "Housewife, Dhaka",
-    content_bn: "রায়জান মার্টের অ্যাফিলিয়েট প্রোগ্রামে যোগ দিয়ে প্রতি মাসে ১৫,০০০ টাকার বেশি আয় করছি!",
-    content_en: "I joined Rayzan Mart affiliate program and earn over 15,000 BDT monthly!",
+    content_bn: "রায়জান মার্টের অ্যাফিলিয়েট প্রোগ্রামে যোগ দিয়ে প্রতি মাসে ১৫,০০০ টাকার বেশি আয় করছি! পরিবারের জন্য বাড়তি আয়ের এই সুযোগ সত্যিই অসাধারণ!",
+    content_en: "I joined Rayzan Mart affiliate program and earn over 15,000 BDT monthly. This additional income for my family is truly amazing!",
+    income_bn: "১৫,০০০+ টাকা/মাস",
+    income_en: "15,000+ BDT/month",
     avatar_url: null,
     rating: 5,
     is_active: true,
@@ -31,8 +35,10 @@ const STATIC_TESTIMONIALS: TestimonialRow[] = [
     name: "মোহাম্মদ রাকিব",
     role_bn: "ছাত্র, চট্টগ্রাম",
     role_en: "Student, Chittagong",
-    content_bn: "পড়াশোনার পাশাপাশি মাসে ৮,০০০-১০,০০০ টাকা আয় করছি।",
-    content_en: "Earning 8,000-10,000 BDT monthly alongside my studies.",
+    content_bn: "পড়াশোনার পাশাপাশি রায়জান মার্ট থেকে আয় করছি। মাসে গড়ে ৮,০০০-১০,০০০ টাকা পাচ্ছি।",
+    content_en: "Earning alongside my studies from Rayzan Mart. Getting 8,000-10,000 BDT monthly on average.",
+    income_bn: "৮,০০০-১০,০০০ টাকা/মাস",
+    income_en: "8,000-10,000 BDT/month",
     avatar_url: null,
     rating: 5,
     is_active: true,
@@ -42,8 +48,10 @@ const STATIC_TESTIMONIALS: TestimonialRow[] = [
     name: "সুমাইয়া আক্তার",
     role_bn: "উদ্যোক্তা, সিলেট",
     role_en: "Entrepreneur, Sylhet",
-    content_bn: "পণ্যের মান অনেক ভালো। কাস্টমাররা সন্তুষ্ট, কমিশনও ভালো আসে।",
-    content_en: "Product quality is excellent. Customers are satisfied and commissions are great.",
+    content_bn: "রায়জান মার্টের পণ্যের মান অনেক ভালো। কাস্টমাররা সন্তুষ্ট, তাই আমার কমিশনও ভালো আসে।",
+    content_en: "Product quality is excellent. Customers are satisfied and my commissions keep growing.",
+    income_bn: "১২,০০০+ টাকা/মাস",
+    income_en: "12,000+ BDT/month",
     avatar_url: null,
     rating: 5,
     is_active: true,
@@ -105,6 +113,13 @@ export const TestimonialsSection = () => {
               <p className="text-slate-700 leading-relaxed flex-1">
                 "{language === "bn" ? t.content_bn : t.content_en}"
               </p>
+
+              {(language === "bn" ? t.income_bn : t.income_en) && (
+                <div className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                  {language === "bn" ? "আয়: " : "Income: "}
+                  {language === "bn" ? t.income_bn : t.income_en}
+                </div>
+              )}
 
               <div className="flex items-center gap-3 pt-2 border-t border-slate-200">
                 {t.avatar_url ? (

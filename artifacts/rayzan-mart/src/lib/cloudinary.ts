@@ -36,7 +36,9 @@ export const uploadToCloudinary = async (
         const errMsg = (() => {
           try { return JSON.parse(xhr.responseText).error || "Upload failed"; } catch { return "Upload failed"; }
         })();
-        reject(new Error(errMsg));
+        const err: any = new Error(errMsg);
+        err.status = xhr.status;
+        reject(err);
       }
     };
 
