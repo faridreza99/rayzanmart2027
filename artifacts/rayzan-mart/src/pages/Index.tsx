@@ -7,7 +7,7 @@ import { FlashSaleBanner } from "@/components/home/FlashSaleBanner";
 import { BestSelling } from "@/components/home/BestSelling";
 import { TrustBadges } from "@/components/home/TrustBadges";
 import { LoyaltyBanner } from "@/components/home/LoyaltyBanner";
-import { FAQSection } from "@/components/home/FAQSection";
+
 import { FloatingWhatsApp } from "@/components/home/FloatingWhatsApp";
 import { TestimonialsSection } from "@/components/home/TestimonialsSection";
 import { CTASection } from "@/components/home/CTASection";
@@ -28,7 +28,6 @@ const Index = () => {
       <TrustBadges />
       <TestimonialsSection />
       <CTASection />
-      <FAQSection />
       <FloatingWhatsApp />
     </MainLayout>
   );

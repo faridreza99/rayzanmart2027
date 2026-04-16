@@ -206,10 +206,10 @@ const AffiliateLanding = () => {
                   {activeFaqs.map((faq, i) => (
                     <AccordionItem key={i} value={`item-${i}`} className="border-slate-100">
                       <AccordionTrigger className="text-left text-lg font-semibold text-slate-800 hover:text-primary decoration-primary">
-                        {faq.question?.[language] || "Question"}
+                        {language === "bn" ? faq.question_bn : faq.question_en}
                       </AccordionTrigger>
                       <AccordionContent className="text-base text-slate-600 leading-relaxed">
-                        {faq.answer?.[language] || "Answer coming soon..."}
+                        {language === "bn" ? faq.answer_bn : faq.answer_en}
                       </AccordionContent>
                     </AccordionItem>
                   ))}
