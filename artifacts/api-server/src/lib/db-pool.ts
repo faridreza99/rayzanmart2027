@@ -15,6 +15,7 @@ const pool = new Pool({
   query_timeout: 15_000,
   keepAlive: true,
   keepAliveInitialDelayMillis: 10_000,
+  application_name: "rayzanmart-api",
 });
 
 pool.on("error", (err) => {
@@ -23,11 +24,7 @@ pool.on("error", (err) => {
 
 export default pool;
 
+// Use pool.query() directly — avoids manual connect/release overhead
 export async function query(sql: string, params?: any[]) {
-  const client = await pool.connect();
-  try {
-    return await client.query(sql, params);
-  } finally {
-    client.release();
-  }
+  return pool.query(sql, params);
 }

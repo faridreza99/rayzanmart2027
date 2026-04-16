@@ -26,14 +26,15 @@ if (!basePath) {
   );
 }
 
+const isProd = process.env.NODE_ENV === "production";
+
 export default defineConfig({
   base: basePath,
   plugins: [
     react(),
     tailwindcss(),
     runtimeErrorOverlay(),
-    ...(process.env.NODE_ENV !== "production" &&
-    process.env.REPL_ID !== undefined
+    ...(!isProd && process.env.REPL_ID !== undefined
       ? [
           await import("@replit/vite-plugin-cartographer").then((m) =>
             m.cartographer({
@@ -57,6 +58,29 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    sourcemap: false,
+    minify: "esbuild",
+    cssCodeSplit: true,
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "vendor-react": ["react", "react-dom", "react-router-dom"],
+          "vendor-query": ["@tanstack/react-query"],
+          "vendor-ui": [
+            "@radix-ui/react-accordion",
+            "@radix-ui/react-dialog",
+            "@radix-ui/react-dropdown-menu",
+            "@radix-ui/react-select",
+            "@radix-ui/react-tabs",
+            "@radix-ui/react-toast",
+            "@radix-ui/react-tooltip",
+          ],
+          "vendor-charts": ["recharts"],
+          "vendor-utils": ["date-fns", "clsx", "tailwind-merge"],
+        },
+      },
+    },
   },
   server: {
     port,
@@ -71,5 +95,8 @@ export default defineConfig({
     port,
     host: "0.0.0.0",
     allowedHosts: true,
+  },
+  optimizeDeps: {
+    include: ["react", "react-dom", "react-router-dom", "@tanstack/react-query"],
   },
 });

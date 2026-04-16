@@ -19,6 +19,11 @@ const server = app.listen(port, () => {
   logger.info({ port }, "Server listening");
 });
 
+// Keep connections alive longer than Replit's 60s reverse proxy timeout
+// headersTimeout must be > keepAliveTimeout to avoid race conditions
+server.keepAliveTimeout = 65_000;
+server.headersTimeout = 66_000;
+
 // Catch port-in-use and other bind errors (EADDRINUSE, EACCES, etc.)
 // Note: Node.js http.Server does NOT pass bind errors to the listen() callback —
 // they are emitted as 'error' events on the server object.

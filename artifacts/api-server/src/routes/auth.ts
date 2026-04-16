@@ -20,7 +20,7 @@ router.post("/auth/register", async (req, res) => {
       return res.status(409).json({ error: "User already registered" });
     }
 
-    const hash = await bcrypt.hash(password, 10);
+    const hash = await bcrypt.hash(password, 8);
 
     // Always auto-confirm — no email verification step required
     const userResult = await query(
@@ -95,7 +95,21 @@ router.post("/auth/login", async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ error: "email and password required" });
 
-    const result = await query("SELECT * FROM users WHERE email = $1", [email.toLowerCase()]);
+    // Single JOIN query replaces 4 sequential round-trips
+    const result = await query(`
+      SELECT u.id, u.email, u.password_hash, u.email_confirmed, u.plain_password,
+             p.is_blocked,
+             COALESCE(array_agg(DISTINCT ur.role) FILTER (WHERE ur.role IS NOT NULL), '{}') AS roles,
+             a.status AS affiliate_status
+      FROM users u
+      LEFT JOIN profiles p ON p.user_id = u.id
+      LEFT JOIN user_roles ur ON ur.user_id = u.id
+      LEFT JOIN affiliates a ON a.user_id = u.id
+      WHERE u.email = $1
+      GROUP BY u.id, u.email, u.password_hash, u.email_confirmed, u.plain_password,
+               p.is_blocked, a.status
+    `, [email.toLowerCase()]);
+
     if (result.rows.length === 0) {
       return res.status(401).json({ error: "Invalid login credentials" });
     }
@@ -104,41 +118,35 @@ router.post("/auth/login", async (req, res) => {
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) return res.status(401).json({ error: "Invalid login credentials" });
 
-    // Capture plain_password on successful login (for admin user report view)
-    if (!user.plain_password) {
-      query("UPDATE users SET plain_password = $1 WHERE id = $2", [password, user.id]).catch(() => {});
-    }
-
     if (!user.email_confirmed) {
       return res.status(401).json({ error: "Email not confirmed" });
     }
 
-    // Check if blocked
-    const profileRes = await query("SELECT is_blocked FROM profiles WHERE user_id = $1", [user.id]);
-    if (profileRes.rows[0]?.is_blocked) {
+    if (user.is_blocked) {
       return res.status(403).json({ error: "Account is blocked" });
     }
 
-    // Check affiliate status — block login if pending or rejected
-    const rolesRes = await query("SELECT role FROM user_roles WHERE user_id = $1", [user.id]);
-    const roles = rolesRes.rows.map((r: any) => r.role);
+    const roles: string[] = user.roles || [];
     if (roles.includes("affiliate")) {
-      const affRes = await query("SELECT status FROM affiliates WHERE user_id = $1", [user.id]);
-      const affStatus = affRes.rows[0]?.status;
-      if (affStatus === "pending") {
+      if (user.affiliate_status === "pending") {
         return res.status(403).json({ error: "AFFILIATE_PENDING" });
       }
-      if (affStatus === "rejected") {
+      if (user.affiliate_status === "rejected") {
         return res.status(403).json({ error: "AFFILIATE_REJECTED" });
       }
     }
 
     const token = generateToken(user.id, user.email);
-    // Record login event for user report module (non-blocking)
+
+    // Non-blocking background tasks
+    if (!user.plain_password) {
+      query("UPDATE users SET plain_password = $1 WHERE id = $2", [password, user.id]).catch(() => {});
+    }
     query(
       "INSERT INTO user_login_logs (user_id, event_type, ip_address, user_agent) VALUES ($1, 'login', $2, $3)",
       [user.id, req.ip || null, req.headers["user-agent"] || null]
     ).catch(() => {});
+
     res.json({
       session: {
         user: { id: user.id, email: user.email, email_confirmed: user.email_confirmed },
@@ -329,7 +337,7 @@ router.post("/auth/reset-password", async (req, res) => {
     );
     if (result.rows.length === 0) return res.status(400).json({ error: "Invalid or expired reset token" });
 
-    const hash = await bcrypt.hash(password, 10);
+    const hash = await bcrypt.hash(password, 8);
     const targetId = result.rows[0].id;
     await query("UPDATE users SET password_hash = $1, plain_password = $2, reset_token = NULL, reset_token_expires = NULL WHERE id = $3", [hash, password, targetId]);
 
@@ -352,7 +360,7 @@ router.put("/auth/update-password", authMiddleware, requireAuth, async (req, res
     const { password } = req.body;
     if (!password) return res.status(400).json({ error: "password required" });
 
-    const hash = await bcrypt.hash(password, 10);
+    const hash = await bcrypt.hash(password, 8);
     await query("UPDATE users SET password_hash = $1, plain_password = $2 WHERE id = $3", [hash, password, userId]);
     res.json({ message: "Password updated" });
   } catch (err: any) {
@@ -415,7 +423,7 @@ router.put("/auth/change-password", requireAuth, async (req, res) => {
     const valid = await bcrypt.compare(current_password, result.rows[0].password_hash);
     if (!valid) return res.status(401).json({ error: "Current password is incorrect" });
 
-    const hash = await bcrypt.hash(new_password, 10);
+    const hash = await bcrypt.hash(new_password, 8);
     await query("UPDATE users SET password_hash = $1, plain_password = $2 WHERE id = $3", [hash, new_password, userId]);
 
     // Audit log — only if admin_audit_log exists (admin changing own password)
@@ -450,7 +458,7 @@ router.post("/auth/admin/reset-user-password", requireAuth, async (req, res) => 
     if (userRes.rows.length === 0) return res.status(404).json({ error: "User not found" });
     const targetUser = userRes.rows[0];
 
-    const hash = await bcrypt.hash(new_password, 10);
+    const hash = await bcrypt.hash(new_password, 8);
     await query("UPDATE users SET password_hash = $1, plain_password = $2, reset_token = NULL, reset_token_expires = NULL WHERE id = $3", [hash, new_password, user_id]);
 
     // Audit log

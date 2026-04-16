@@ -49,6 +49,7 @@ app.use(express.urlencoded({ extended: true, limit: "2mb" }));
 app.use((_req: Request, res: Response, next: NextFunction) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "SAMEORIGIN");
+  res.setHeader("Connection", "keep-alive");
   next();
 });
 
@@ -65,11 +66,5 @@ app.use("/api/db/:table", (req: Request, res: Response, next: NextFunction) => {
 
 // ─── Routes ────────────────────────────────────────────────────────────────
 app.use("/api", router);
-
-// ─── Keep-alive for connection reuse ───────────────────────────────────────
-app.use((_req: Request, res: Response, next: NextFunction) => {
-  res.setHeader("Connection", "keep-alive");
-  next();
-});
 
 export default app;
