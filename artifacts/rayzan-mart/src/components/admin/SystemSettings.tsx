@@ -45,6 +45,9 @@ export const SystemSettings = () => {
   const [socialFacebook, setSocialFacebook] = useState("");
   const [socialInstagram, setSocialInstagram] = useState("");
   const [socialYoutube, setSocialYoutube] = useState("");
+  const [socialLinkedin, setSocialLinkedin] = useState("");
+  const [socialTwitter, setSocialTwitter] = useState("");
+  const [socialTiktok, setSocialTiktok] = useState("");
 
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [whatsappMessage, setWhatsappMessage] = useState("হ্যালো! আমি একটি প্রোডাক্ট সম্পর্কে জানতে চাই।");
@@ -82,6 +85,9 @@ export const SystemSettings = () => {
       setSocialFacebook(settings.social_links?.facebook || "");
       setSocialInstagram(settings.social_links?.instagram || "");
       setSocialYoutube(settings.social_links?.youtube || "");
+      setSocialLinkedin(settings.social_links?.linkedin || "");
+      setSocialTwitter(settings.social_links?.twitter || "");
+      setSocialTiktok(settings.social_links?.tiktok || "");
       const s = settings as any;
       const wa = s.whatsapp_number;
       setWhatsappNumber(wa ? String(wa).replace(/"/g, "") : "8801347195345");
@@ -224,6 +230,9 @@ export const SystemSettings = () => {
           facebook: socialFacebook,
           instagram: socialInstagram,
           youtube: socialYoutube,
+          linkedin: socialLinkedin,
+          twitter: socialTwitter,
+          tiktok: socialTiktok,
         },
       });
       toast.success(t("settingsSaved"));
@@ -674,6 +683,30 @@ export const SystemSettings = () => {
                 value={socialYoutube}
                 onChange={(e) => setSocialYoutube(e.target.value)}
                 placeholder="https://youtube.com/..."
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>LinkedIn URL</Label>
+              <Input
+                value={socialLinkedin}
+                onChange={(e) => setSocialLinkedin(e.target.value)}
+                placeholder="https://linkedin.com/in/..."
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Twitter / X URL</Label>
+              <Input
+                value={socialTwitter}
+                onChange={(e) => setSocialTwitter(e.target.value)}
+                placeholder="https://twitter.com/..."
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>TikTok URL</Label>
+              <Input
+                value={socialTiktok}
+                onChange={(e) => setSocialTiktok(e.target.value)}
+                placeholder="https://tiktok.com/@..."
               />
             </div>
           </div>

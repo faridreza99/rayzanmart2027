@@ -34,6 +34,9 @@ export interface SiteSettings {
     facebook: string;
     instagram: string;
     youtube: string;
+    linkedin: string;
+    twitter: string;
+    tiktok: string;
   };
   loyalty_rules: {
     enabled: boolean;

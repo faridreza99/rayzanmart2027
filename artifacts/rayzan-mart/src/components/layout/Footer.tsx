@@ -1,8 +1,14 @@
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Facebook, Instagram, Youtube, Phone, Mail, MapPin } from "lucide-react";
+import { Facebook, Instagram, Youtube, Phone, Mail, MapPin, Linkedin, Twitter } from "lucide-react";
 import { useSiteSettings } from "@/hooks/useAdminSettings";
 import { FOOTER_PAGES_DEFAULTS } from "@/lib/footer-pages";
+
+const TikTokIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.28 8.28 0 0 0 4.83 1.54V6.78a4.85 4.85 0 0 1-1.06-.09z" />
+  </svg>
+);
 
 export const Footer = () => {
   const { language, t } = useLanguage();
@@ -24,9 +30,14 @@ export const Footer = () => {
     ? settings?.contact_info?.address_bn || ""
     : settings?.contact_info?.address_en || "";
 
-  const facebookUrl = settings?.social_links?.facebook || "";
-  const instagramUrl = settings?.social_links?.instagram || "";
-  const youtubeUrl = settings?.social_links?.youtube || "";
+  const socials = [
+    { url: settings?.social_links?.facebook || "", icon: <Facebook className="h-5 w-5" />, label: "Facebook" },
+    { url: settings?.social_links?.instagram || "", icon: <Instagram className="h-5 w-5" />, label: "Instagram" },
+    { url: settings?.social_links?.youtube || "", icon: <Youtube className="h-5 w-5" />, label: "YouTube" },
+    { url: settings?.social_links?.linkedin || "", icon: <Linkedin className="h-5 w-5" />, label: "LinkedIn" },
+    { url: settings?.social_links?.twitter || "", icon: <Twitter className="h-5 w-5" />, label: "Twitter / X" },
+    { url: settings?.social_links?.tiktok || "", icon: <TikTokIcon className="h-5 w-5" />, label: "TikTok" },
+  ].filter((s) => s.url.trim() !== "");
 
   return (
     <footer className="mt-auto border-t bg-card">
@@ -47,28 +58,26 @@ export const Footer = () => {
                   : settings.footer_tagline.en}
               </p>
             )}
-            <div className="flex gap-3">
-              {facebookUrl && (
-                <a href={facebookUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
-                  <Facebook className="h-5 w-5" />
-                </a>
-              )}
-              {instagramUrl && (
-                <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
-                  <Instagram className="h-5 w-5" />
-                </a>
-              )}
-              {youtubeUrl && (
-                <a href={youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
-                  <Youtube className="h-5 w-5" />
-                </a>
-              )}
-              {!facebookUrl && !instagramUrl && !youtubeUrl && (
-                <span className="text-xs text-muted-foreground italic">
-                  {language === "bn" ? "সোশ্যাল লিংক সেট করা হয়নি" : "No social links set"}
-                </span>
-              )}
-            </div>
+            {socials.length > 0 ? (
+              <div className="flex flex-wrap gap-3">
+                {socials.map((s) => (
+                  <a
+                    key={s.label}
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={s.label}
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    {s.icon}
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <span className="text-xs text-muted-foreground italic">
+                {language === "bn" ? "সোশ্যাল লিংক সেট করা হয়নি" : "No social links set"}
+              </span>
+            )}
           </div>
 
           {/* Quick Links */}
