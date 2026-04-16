@@ -8,7 +8,7 @@ export interface MarketingExpense {
   amount: number;
   date: string;
   category: string;
-  description?: string;
+  notes?: string;
   created_at: string;
 }
 

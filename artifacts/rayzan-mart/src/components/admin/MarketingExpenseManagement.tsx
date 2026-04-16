@@ -26,7 +26,7 @@ export const MarketingExpenseManagement = () => {
     amount: 0,
     date: format(new Date(), "yyyy-MM-dd"),
     category: "Ads",
-    description: "",
+    notes: "",
   });
 
   const openAddDialog = () => {
@@ -36,7 +36,7 @@ export const MarketingExpenseManagement = () => {
       amount: 0,
       date: format(new Date(), "yyyy-MM-dd"),
       category: "Ads",
-      description: "",
+      notes: "",
     });
     setIsDialogOpen(true);
   };
@@ -48,7 +48,7 @@ export const MarketingExpenseManagement = () => {
       amount: expense.amount,
       date: expense.date,
       category: expense.category,
-      description: expense.description || "",
+      notes: expense.notes || "",
     });
     setIsDialogOpen(true);
   };
@@ -153,7 +153,7 @@ export const MarketingExpenseManagement = () => {
                   <TableCell>
                     <div>
                       <p className="font-semibold">{expense.title}</p>
-                      {expense.description && <p className="text-xs text-muted-foreground">{expense.description}</p>}
+                      {expense.notes && <p className="text-xs text-muted-foreground">{expense.notes}</p>}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -247,8 +247,8 @@ export const MarketingExpenseManagement = () => {
               <Label>{language === "bn" ? "বিবরণ (ঐচ্ছিক)" : "Description (Optional)"}</Label>
               <textarea
                 className="w-full p-3 rounded-md border border-input bg-background min-h-[100px]"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 placeholder={language === "bn" ? "অতিরিক্ত তথ্য..." : "Additional details..."}
               />
             </div>
