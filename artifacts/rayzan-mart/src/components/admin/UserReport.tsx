@@ -604,25 +604,46 @@ export const UserReport = () => {
                       </TableCell>
                       <TableCell className="text-muted-foreground py-2 whitespace-nowrap">{u.phone || "—"}</TableCell>
                       <TableCell className="py-2">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-mono text-muted-foreground select-none">
-                            {revealedPw[u.id] !== undefined
-                              ? (revealedPw[u.id] || <span className="italic text-[10px]">{bn ? "সংরক্ষিত নেই" : "Not saved"}</span>)
-                              : "••••••••"}
-                          </span>
+                        {/* Case: not yet fetched */}
+                        {revealedPw[u.id] === undefined && (
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-mono text-muted-foreground select-none text-xs">••••••••</span>
+                            <button
+                              className="text-muted-foreground hover:text-primary transition-colors"
+                              title={bn ? "পাসওয়ার্ড দেখুন" : "Show password"}
+                              onClick={() => handleRevealPassword(u.id)}
+                            >
+                              {revealLoading === u.id
+                                ? <Loader2 className="h-3 w-3 animate-spin" />
+                                : <Eye className="h-3 w-3" />
+                              }
+                            </button>
+                          </div>
+                        )}
+                        {/* Case: fetched and has value */}
+                        {revealedPw[u.id] !== undefined && revealedPw[u.id] !== null && (
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-mono text-xs text-green-700 font-medium select-all">{revealedPw[u.id]}</span>
+                            <button
+                              className="text-muted-foreground hover:text-primary transition-colors"
+                              title={bn ? "লুকান" : "Hide"}
+                              onClick={() => setRevealedPw(prev => { const n = { ...prev }; delete n[u.id]; return n; })}
+                            >
+                              <EyeOff className="h-3 w-3" />
+                            </button>
+                          </div>
+                        )}
+                        {/* Case: fetched but null — prompt to set password */}
+                        {revealedPw[u.id] !== undefined && revealedPw[u.id] === null && (
                           <button
-                            className="text-muted-foreground hover:text-primary transition-colors"
-                            title={revealedPw[u.id] !== undefined ? (bn ? "লুকান" : "Hide") : (bn ? "দেখুন" : "Show")}
-                            onClick={() => handleRevealPassword(u.id)}
+                            className="flex items-center gap-1 text-[10px] text-orange-600 hover:text-orange-700 border border-orange-300 rounded px-1.5 py-0.5 hover:bg-orange-50 transition-colors"
+                            title={bn ? "পাসওয়ার্ড সেট করুন" : "Set password to save it"}
+                            onClick={() => { setPwUser(u); setNewPw(""); setShowPw(false); setPwOpen(true); setRevealedPw(prev => { const n = { ...prev }; delete n[u.id]; return n; }); }}
                           >
-                            {revealLoading === u.id
-                              ? <Loader2 className="h-3 w-3 animate-spin" />
-                              : revealedPw[u.id] !== undefined
-                              ? <EyeOff className="h-3 w-3" />
-                              : <Eye className="h-3 w-3" />
-                            }
+                            <KeyRound className="h-2.5 w-2.5" />
+                            {bn ? "পাসওয়ার্ড সেট করুন" : "Set password"}
                           </button>
-                        </div>
+                        )}
                       </TableCell>
                       <TableCell className="text-center py-2">
                         <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{u.total_orders}</Badge>
