@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Package, User, Heart, Loader2, Info, ShoppingBag, Gift, Star, History, UserPlus, Camera, MapPin, CreditCard, ShieldCheck } from "lucide-react";
+import { Package, User, Heart, Loader2, Info, ShoppingBag, Gift, Star, History, UserPlus, Camera, MapPin, CreditCard, ShieldCheck, MessageSquare, Send } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -26,6 +26,132 @@ import { useLoyaltyTransactions } from "@/hooks/useLoyalty";
 import { useSiteSettings } from "@/hooks/useAdminSettings";
 import { ChangePassword } from "@/components/customer/ChangePassword";
 import { TwoFactorSettings } from "@/components/customer/TwoFactorSettings";
+import { useSubmitFeedback, useMyFeedback } from "@/hooks/useWebsiteFeedback";
+import { Textarea } from "@/components/ui/textarea";
+
+function StarPicker({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const [hovered, setHovered] = useState(0);
+  return (
+    <div className="flex gap-1">
+      {[1, 2, 3, 4, 5].map((s) => (
+        <button key={s} type="button" onClick={() => onChange(s)}
+          onMouseEnter={() => setHovered(s)} onMouseLeave={() => setHovered(0)}>
+          <Star className={`w-8 h-8 transition-colors ${s <= (hovered || value) ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`} />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function FeedbackTab({ language }: { language: string }) {
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const { data: myFeedbacks, isLoading } = useMyFeedback();
+  const submitMutation = useSubmitFeedback();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!comment.trim()) {
+      toast.error(language === "bn" ? "মন্তব্য লিখুন" : "Please write a comment");
+      return;
+    }
+    try {
+      await submitMutation.mutateAsync({ rating, comment });
+      toast.success(language === "bn"
+        ? "ফিডব্যাক জমা হয়েছে! অনুমোদনের পর প্রকাশিত হবে।"
+        : "Feedback submitted! It will appear after admin approval.");
+      setComment("");
+      setRating(5);
+    } catch {
+      toast.error(language === "bn" ? "সমস্যা হয়েছে" : "Something went wrong");
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <h2 className="flex items-center gap-2 text-lg font-semibold">
+        <MessageSquare className="h-5 w-5 text-primary" />
+        {language === "bn" ? "ওয়েবসাইট ফিডব্যাক" : "Website Feedback"}
+      </h2>
+
+      {/* Submit form */}
+      <div className="rounded-xl border bg-card p-5 shadow-sm">
+        <h3 className="font-medium mb-4 text-sm text-muted-foreground uppercase tracking-wide">
+          {language === "bn" ? "নতুন ফিডব্যাক দিন" : "Submit New Feedback"}
+        </h3>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-2 block">
+              {language === "bn" ? "রেটিং" : "Rating"}
+            </label>
+            <StarPicker value={rating} onChange={setRating} />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-2 block">
+              {language === "bn" ? "আপনার মন্তব্য" : "Your Comment"}
+            </label>
+            <Textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder={language === "bn" ? "আপনার অভিজ্ঞতা লিখুন..." : "Write your experience with RayzanMart..."}
+              rows={4}
+              className="resize-none"
+            />
+          </div>
+          <Button type="submit" className="bg-primary hover:bg-red-700 text-white gap-2"
+            disabled={submitMutation.isPending}>
+            <Send className="w-4 h-4" />
+            {submitMutation.isPending
+              ? (language === "bn" ? "জমা হচ্ছে..." : "Submitting...")
+              : (language === "bn" ? "জমা দিন" : "Submit Feedback")}
+          </Button>
+        </form>
+      </div>
+
+      {/* My feedback history */}
+      <div className="rounded-xl border bg-card p-5 shadow-sm">
+        <h3 className="font-medium mb-4 text-sm text-muted-foreground uppercase tracking-wide">
+          {language === "bn" ? "আমার ফিডব্যাক ইতিহাস" : "My Feedback History"}
+        </h3>
+        {isLoading ? (
+          <div className="flex justify-center py-6"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+        ) : !myFeedbacks || myFeedbacks.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <MessageSquare className="h-10 w-10 mx-auto mb-2 opacity-30" />
+            <p className="text-sm">{language === "bn" ? "এখনো কোনো ফিডব্যাক দেননি" : "No feedback submitted yet"}</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {myFeedbacks.map((f) => (
+              <div key={f.id} className="rounded-lg border p-4">
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <div className="flex gap-0.5">
+                    {[1,2,3,4,5].map(s => (
+                      <Star key={s} className={`w-4 h-4 ${s <= f.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`} />
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                      f.is_approved ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"
+                    }`}>
+                      {f.is_approved
+                        ? (language === "bn" ? "অনুমোদিত" : "Approved")
+                        : (language === "bn" ? "অপেক্ষমান" : "Pending")}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(f.created_at).toLocaleDateString(language === "bn" ? "bn-BD" : "en-BD")}
+                    </span>
+                  </div>
+                </div>
+                <p className="text-sm text-foreground">{f.comment}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 const CustomerDashboard = () => {
   const { t, language } = useLanguage();
@@ -148,6 +274,7 @@ const CustomerDashboard = () => {
     { path: "/dashboard/wishlist", icon: Heart, label: t("wishlist") },
     { path: "/dashboard/loyalty", icon: Gift, label: t("loyaltyPoints") },
     { path: "/dashboard/affiliate", icon: UserPlus, label: language === "bn" ? "অ্যাফিলিয়েট" : "Affiliate" },
+    { path: "/dashboard/feedback", icon: MessageSquare, label: language === "bn" ? "ফিডব্যাক" : "Feedback" },
     { path: "/dashboard/profile", icon: User, label: t("profile") },
   ];
 
@@ -156,6 +283,7 @@ const CustomerDashboard = () => {
   const isLoyaltyTab = location.pathname === "/dashboard/loyalty";
   const isAffiliateTab = location.pathname === "/dashboard/affiliate";
   const isProfileTab = location.pathname === "/dashboard/profile";
+  const isFeedbackTab = location.pathname === "/dashboard/feedback";
 
   return (
     <MainLayout>
@@ -624,6 +752,8 @@ const CustomerDashboard = () => {
                   <TwoFactorSettings />
                 </div>
               )}
+
+              {isFeedbackTab && <FeedbackTab language={language} />}
             </div>
           </div>
         </div>
