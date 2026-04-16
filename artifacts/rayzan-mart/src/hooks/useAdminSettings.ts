@@ -12,6 +12,12 @@ export interface SiteSettings {
     instructions_bn: string;
     instructions_en: string;
   };
+  payment_settings: {
+    bkash_number: string;
+    nagad_number: string;
+    instructions_bn: string;
+    instructions_en: string;
+  };
   flash_sale: { is_active: boolean; end_time: string };
   footer_pages: FooterPagesSettings;
   loyalty_rules: {

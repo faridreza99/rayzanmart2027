@@ -30,6 +30,7 @@ export const SystemSettings = () => {
   const [flashSaleActive, setFlashSaleActive] = useState(false);
   const [flashSaleEnd, setFlashSaleEnd] = useState("");
   const [bkashNumber, setBkashNumber] = useState("");
+  const [nagadNumber, setNagadNumber] = useState("");
   const [paymentInstructionsBn, setPaymentInstructionsBn] = useState("");
   const [paymentInstructionsEn, setPaymentInstructionsEn] = useState("");
   const [footerPages, setFooterPages] = useState<FooterPagesSettings>(FOOTER_PAGES_DEFAULTS);
@@ -58,6 +59,7 @@ export const SystemSettings = () => {
       setFlashSaleActive(settings.flash_sale?.is_active ?? false);
       setFlashSaleEnd(settings.flash_sale?.end_time || "");
       setBkashNumber(settings.payment_settings?.bkash_number || "");
+      setNagadNumber(settings.payment_settings?.nagad_number || "");
       setPaymentInstructionsBn(settings.payment_settings?.instructions_bn || "");
       setPaymentInstructionsEn(settings.payment_settings?.instructions_en || "");
       setFooterPages({ ...FOOTER_PAGES_DEFAULTS, ...(settings.footer_pages || {}) });
@@ -149,6 +151,7 @@ export const SystemSettings = () => {
         key: "payment_settings",
         value: {
           bkash_number: bkashNumber,
+          nagad_number: nagadNumber,
           instructions_bn: paymentInstructionsBn,
           instructions_en: paymentInstructionsEn,
         },
@@ -367,13 +370,23 @@ export const SystemSettings = () => {
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>{language === "bn" ? "বিকাশ নাম্বার" : "bKash Number"}</Label>
-            <Input
-              value={bkashNumber}
-              onChange={(e) => setBkashNumber(e.target.value)}
-              placeholder="017XXXXXXXX"
-            />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label>{language === "bn" ? "বিকাশ নাম্বার" : "bKash Number"}</Label>
+              <Input
+                value={bkashNumber}
+                onChange={(e) => setBkashNumber(e.target.value)}
+                placeholder="017XXXXXXXX"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{language === "bn" ? "নগদ নাম্বার" : "Nagad Number"}</Label>
+              <Input
+                value={nagadNumber}
+                onChange={(e) => setNagadNumber(e.target.value)}
+                placeholder="017XXXXXXXX"
+              />
+            </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">

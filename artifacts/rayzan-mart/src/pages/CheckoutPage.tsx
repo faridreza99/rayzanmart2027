@@ -135,7 +135,7 @@ const CheckoutPage = () => {
       return;
     }
     if (!formData.transactionId.trim()) {
-      toast.error(language === "bn" ? "বিকাশ ট্রানজেকশন আইডি প্রদান করুন" : "bKash Transaction ID is required");
+      toast.error(language === "bn" ? "ট্রানজেকশন আইডি প্রদান করুন" : "Transaction ID is required");
       return;
     }
 
@@ -439,18 +439,54 @@ const CheckoutPage = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="sm:col-span-2 bg-primary/5 p-4 rounded-lg border border-primary/20">
-                    <Label htmlFor="transactionId" className="text-primary font-bold">
-                      {language === "bn" ? "বিকাশ ট্রানজেকশন আইডি (ডেলিভারি চার্জের জন্য)" : "bKash Transaction ID (for Delivery Charge)"} *
-                    </Label>
-                    <Input
-                      id="transactionId"
-                      placeholder="8NX7XXXXXX"
-                      value={formData.transactionId}
-                      onChange={(e) => setFormData({ ...formData, transactionId: e.target.value })}
-                      className="mt-1 border-primary/30"
-                      required
-                    />
+                  {/* Payment info from admin settings */}
+                  <div className="sm:col-span-2 bg-primary/5 p-4 rounded-lg border border-primary/20 space-y-3">
+                    <p className="font-semibold text-primary">
+                      {language === "bn" ? "পেমেন্ট তথ্য" : "Payment Information"}
+                    </p>
+                    {(settings?.payment_settings?.instructions_bn || settings?.payment_settings?.instructions_en) && (
+                      <p className="text-sm text-muted-foreground">
+                        {language === "bn"
+                          ? settings?.payment_settings?.instructions_bn
+                          : settings?.payment_settings?.instructions_en}
+                      </p>
+                    )}
+                    <div className="grid gap-2 text-sm">
+                      {settings?.payment_settings?.bkash_number && (
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium w-16">bKash:</span>
+                          <span className="font-bold text-primary tracking-wide">
+                            {settings.payment_settings.bkash_number}
+                          </span>
+                        </div>
+                      )}
+                      {settings?.payment_settings?.nagad_number && (
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium w-16">Nagad:</span>
+                          <span className="font-bold text-primary tracking-wide">
+                            {settings.payment_settings.nagad_number}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="pt-1">
+                      <Label htmlFor="transactionId" className="text-primary font-bold">
+                        {language === "bn" ? "ট্রানজেকশন আইডি" : "Transaction ID"} *
+                      </Label>
+                      <Input
+                        id="transactionId"
+                        placeholder="8NX7XXXXXX"
+                        value={formData.transactionId}
+                        onChange={(e) => setFormData({ ...formData, transactionId: e.target.value })}
+                        className="mt-1 border-primary/30"
+                        required
+                      />
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {language === "bn"
+                          ? "পেমেন্ট করার পর ট্রানজেকশন আইডি এখানে লিখুন"
+                          : "Enter the transaction ID after making payment"}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
