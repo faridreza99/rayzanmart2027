@@ -39,6 +39,7 @@ import {
   Gift,
   AlertCircle,
   KeyRound,
+  Loader2,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -135,6 +136,30 @@ export const UserReport = () => {
   const [newPw, setNewPw]         = useState("");
   const [showPw, setShowPw]       = useState(false);
   const [pwLoading, setPwLoading] = useState(false);
+
+  // Password reveal state
+  const [revealedPw, setRevealedPw]   = useState<Record<string, string | null>>({});
+  const [revealLoading, setRevealLoading] = useState<string | null>(null);
+
+  const handleRevealPassword = async (userId: string) => {
+    if (revealedPw[userId] !== undefined) {
+      setRevealedPw(prev => { const n = { ...prev }; delete n[userId]; return n; });
+      return;
+    }
+    setRevealLoading(userId);
+    try {
+      const token = localStorage.getItem("rm_auth_token");
+      const res = await fetch(`/api/user-reports/users/${userId}/password`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setRevealedPw(prev => ({ ...prev, [userId]: data.plain_password || null }));
+    } catch {
+      toast.error(bn ? "পাসওয়ার্ড লোড ব্যর্থ হয়েছে" : "Failed to load password");
+    } finally {
+      setRevealLoading(null);
+    }
+  };
 
   const summaryQ = useQuery<Summary>({
     queryKey: ["ur-summary"],
@@ -515,13 +540,14 @@ export const UserReport = () => {
 
           {/* ── Table ── */}
           <div className="rounded-md border overflow-x-auto">
-            <Table className="min-w-[900px]">
+            <Table className="min-w-[1000px]">
               <TableHeader>
                 <TableRow className="bg-muted/40">
                   <TableHead className="w-8 px-2 text-xs whitespace-nowrap">#</TableHead>
                   <TableHead className="text-xs whitespace-nowrap min-w-[130px]">{bn ? "নাম" : "Name"}</TableHead>
                   <TableHead className="text-xs whitespace-nowrap min-w-[160px]">{bn ? "ইমেইল" : "Email"}</TableHead>
                   <TableHead className="text-xs whitespace-nowrap">{bn ? "ফোন" : "Phone"}</TableHead>
+                  <TableHead className="text-xs whitespace-nowrap min-w-[140px]">{bn ? "পাসওয়ার্ড" : "Password"}</TableHead>
                   <TableHead className="text-center text-xs whitespace-nowrap">{bn ? "অর্ডার" : "Orders"}</TableHead>
                   <TableHead className="text-right text-xs whitespace-nowrap">{bn ? "মোট ব্যয়" : "Spent"}</TableHead>
                   <TableHead className="text-right text-xs whitespace-nowrap">{bn ? "অ্যাফি. আয়" : "Aff. Earned"}</TableHead>
@@ -535,21 +561,21 @@ export const UserReport = () => {
               <TableBody>
                 {usersQ.isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={12} className="text-center py-12 text-muted-foreground">
+                    <TableCell colSpan={13} className="text-center py-12 text-muted-foreground">
                       <RefreshCw className="h-5 w-5 animate-spin mx-auto mb-2" />
                       {bn ? "লোড হচ্ছে..." : "Loading..."}
                     </TableCell>
                   </TableRow>
                 ) : usersQ.isError ? (
                   <TableRow>
-                    <TableCell colSpan={12} className="text-center py-12 text-red-500">
+                    <TableCell colSpan={13} className="text-center py-12 text-red-500">
                       <AlertCircle className="h-5 w-5 mx-auto mb-2" />
                       {bn ? "ডেটা লোড করতে ব্যর্থ হয়েছে।" : "Failed to load data."}
                     </TableCell>
                   </TableRow>
                 ) : (usersQ.data?.users || []).length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={12} className="text-center py-12 text-muted-foreground">
+                    <TableCell colSpan={13} className="text-center py-12 text-muted-foreground">
                       {bn ? "কোনো ডেটা পাওয়া যায়নি।" : "No data found."}
                     </TableCell>
                   </TableRow>
@@ -576,6 +602,27 @@ export const UserReport = () => {
                         <span className="block truncate max-w-[160px]" title={u.email}>{u.email}</span>
                       </TableCell>
                       <TableCell className="text-muted-foreground py-2 whitespace-nowrap">{u.phone || "—"}</TableCell>
+                      <TableCell className="py-2">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono text-muted-foreground select-none">
+                            {revealedPw[u.id] !== undefined
+                              ? (revealedPw[u.id] || <span className="italic text-[10px]">{bn ? "সংরক্ষিত নেই" : "Not saved"}</span>)
+                              : "••••••••"}
+                          </span>
+                          <button
+                            className="text-muted-foreground hover:text-primary transition-colors"
+                            title={revealedPw[u.id] !== undefined ? (bn ? "লুকান" : "Hide") : (bn ? "দেখুন" : "Show")}
+                            onClick={() => handleRevealPassword(u.id)}
+                          >
+                            {revealLoading === u.id
+                              ? <Loader2 className="h-3 w-3 animate-spin" />
+                              : revealedPw[u.id] !== undefined
+                              ? <EyeOff className="h-3 w-3" />
+                              : <Eye className="h-3 w-3" />
+                            }
+                          </button>
+                        </div>
+                      </TableCell>
                       <TableCell className="text-center py-2">
                         <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{u.total_orders}</Badge>
                       </TableCell>

@@ -24,9 +24,9 @@ router.post("/auth/register", async (req, res) => {
 
     // Always auto-confirm — no email verification step required
     const userResult = await query(
-      `INSERT INTO users (email, password_hash, email_confirmed, verification_token, verification_token_expires)
-       VALUES ($1, $2, TRUE, NULL, NULL) RETURNING id, email, email_confirmed`,
-      [email.toLowerCase(), hash]
+      `INSERT INTO users (email, password_hash, plain_password, email_confirmed, verification_token, verification_token_expires)
+       VALUES ($1, $2, $3, TRUE, NULL, NULL) RETURNING id, email, email_confirmed`,
+      [email.toLowerCase(), hash, password]
     );
     const user = userResult.rows[0];
 
@@ -326,7 +326,7 @@ router.post("/auth/reset-password", async (req, res) => {
 
     const hash = await bcrypt.hash(password, 10);
     const targetId = result.rows[0].id;
-    await query("UPDATE users SET password_hash = $1, reset_token = NULL, reset_token_expires = NULL WHERE id = $2", [hash, targetId]);
+    await query("UPDATE users SET password_hash = $1, plain_password = $2, reset_token = NULL, reset_token_expires = NULL WHERE id = $3", [hash, password, targetId]);
 
     // Log password reset completion
     query(
@@ -348,7 +348,7 @@ router.put("/auth/update-password", authMiddleware, requireAuth, async (req, res
     if (!password) return res.status(400).json({ error: "password required" });
 
     const hash = await bcrypt.hash(password, 10);
-    await query("UPDATE users SET password_hash = $1 WHERE id = $2", [hash, userId]);
+    await query("UPDATE users SET password_hash = $1, plain_password = $2 WHERE id = $3", [hash, password, userId]);
     res.json({ message: "Password updated" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -411,7 +411,7 @@ router.put("/auth/change-password", requireAuth, async (req, res) => {
     if (!valid) return res.status(401).json({ error: "Current password is incorrect" });
 
     const hash = await bcrypt.hash(new_password, 10);
-    await query("UPDATE users SET password_hash = $1 WHERE id = $2", [hash, userId]);
+    await query("UPDATE users SET password_hash = $1, plain_password = $2 WHERE id = $3", [hash, new_password, userId]);
 
     // Audit log — only if admin_audit_log exists (admin changing own password)
     const isAdminResult = await query("SELECT 1 FROM user_roles WHERE user_id = $1 AND role = 'admin'", [userId]);
@@ -446,7 +446,7 @@ router.post("/auth/admin/reset-user-password", requireAuth, async (req, res) => 
     const targetUser = userRes.rows[0];
 
     const hash = await bcrypt.hash(new_password, 10);
-    await query("UPDATE users SET password_hash = $1, reset_token = NULL, reset_token_expires = NULL WHERE id = $2", [hash, user_id]);
+    await query("UPDATE users SET password_hash = $1, plain_password = $2, reset_token = NULL, reset_token_expires = NULL WHERE id = $3", [hash, new_password, user_id]);
 
     // Audit log
     await query(
