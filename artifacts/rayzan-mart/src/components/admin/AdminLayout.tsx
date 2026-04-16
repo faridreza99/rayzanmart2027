@@ -1,7 +1,6 @@
 import { ReactNode, useState, useEffect } from "react";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminTopBar } from "./AdminTopBar";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { AdminRoleProvider } from "@/contexts/AdminRoleContext";
 import { cn } from "@/lib/utils";
 
@@ -72,9 +71,9 @@ export const AdminLayout = ({ children, activeTab, onTabChange }: AdminLayoutPro
         {/* Main Content */}
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <AdminTopBar onMobileMenuOpen={() => setMobileSidebarOpen(true)} />
-          <ScrollArea className="flex-1">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden">
             <main className="p-4 md:p-6">{children}</main>
-          </ScrollArea>
+          </div>
         </div>
       </div>
     </AdminRoleProvider>
