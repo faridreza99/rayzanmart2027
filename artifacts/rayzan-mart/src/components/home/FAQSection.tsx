@@ -5,11 +5,11 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useFAQs } from "@/hooks/useFAQs";
+import { useHomepageFAQs } from "@/hooks/useFAQs";
 
 export const FAQSection = () => {
   const { language } = useLanguage();
-  const { data: faqs, isLoading } = useFAQs();
+  const { data: faqs, isLoading } = useHomepageFAQs();
 
   const list = faqs?.filter(f => f.is_active) ?? [];
 

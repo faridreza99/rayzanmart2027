@@ -35,20 +35,25 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
-import { FAQItem } from "@/types/faq";
 import { EnterpriseConfirmDialog } from "./EnterpriseConfirmDialog";
 import { EnterpriseEmptyState } from "./EnterpriseEmptyState";
 
-export const FAQManagement = () => {
+type FAQType = "homepage" | "affiliate";
+
+interface FAQManagementProps {
+    faqType: FAQType;
+}
+
+export const FAQManagement = ({ faqType }: FAQManagementProps) => {
     const { language, t } = useLanguage();
-    const { data: faqs, isLoading } = useAdminFAQs();
+    const { data: faqs, isLoading } = useAdminFAQs(faqType);
     const createFAQ = useCreateFAQ();
     const updateFAQ = useUpdateFAQ();
     const deleteFAQ = useDeleteFAQ();
 
     const [searchQuery, setSearchQuery] = useState("");
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [editingFAQ, setEditingFAQ] = useState<FAQItem | null>(null);
+    const [editingFAQ, setEditingFAQ] = useState<any | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
     const [formData, setFormData] = useState({
@@ -62,7 +67,12 @@ export const FAQManagement = () => {
         f.question.bn.includes(searchQuery)
     );
 
-    const handleOpenDialog = (faq?: FAQItem) => {
+    const isHomepage = faqType === "homepage";
+    const sectionLabel = isHomepage
+        ? (language === "bn" ? "হোমপেজ FAQ" : "Homepage FAQ")
+        : (language === "bn" ? "অ্যাফিলিয়েট FAQ" : "Affiliate FAQ");
+
+    const handleOpenDialog = (faq?: any) => {
         if (faq) {
             setEditingFAQ(faq);
             setFormData({
@@ -87,11 +97,12 @@ export const FAQManagement = () => {
                 await updateFAQ.mutateAsync({
                     id: editingFAQ.id,
                     ...formData,
+                    faq_type: faqType,
                 });
-                toast.success(language === "bn" ? "FAQ আপডেট করা হয়েছে" : "FAQ updated successfully");
+                toast.success(language === "bn" ? "FAQ আপডেট করা হয়েছে" : "FAQ updated successfully");
             } else {
-                await createFAQ.mutateAsync(formData);
-                toast.success(language === "bn" ? "FAQ যোগ করা হয়েছে" : "FAQ added successfully");
+                await createFAQ.mutateAsync({ ...formData, faq_type: faqType });
+                toast.success(language === "bn" ? "FAQ যোগ করা হয়েছে" : "FAQ added successfully");
             }
             setIsDialogOpen(false);
         } catch (error) {
@@ -103,18 +114,19 @@ export const FAQManagement = () => {
         if (!confirmDelete) return;
         try {
             await deleteFAQ.mutateAsync(confirmDelete);
-            toast.success(language === "bn" ? "FAQ মুছে ফেলা হয়েছে" : "FAQ deleted successfully");
+            toast.success(language === "bn" ? "FAQ মুছে ফেলা হয়েছে" : "FAQ deleted successfully");
             setConfirmDelete(null);
         } catch (error) {
             toast.error(t("somethingWentWrong"));
         }
     };
 
-    const toggleStatus = async (faq: FAQItem) => {
+    const toggleStatus = async (faq: any) => {
         try {
             await updateFAQ.mutateAsync({
                 id: faq.id,
                 is_active: !faq.is_active,
+                faq_type: faqType,
             });
             toast.success(t("statusUpdated"));
         } catch (error) {
@@ -135,9 +147,11 @@ export const FAQManagement = () => {
         <div className="space-y-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight">{language === "bn" ? "সাধারণ জিজ্ঞাসাসমূহ" : "FAQs"}</h2>
+                    <h2 className="text-2xl font-bold tracking-tight">{sectionLabel}</h2>
                     <p className="text-muted-foreground">
-                        {language === "bn" ? "ল্যান্ডিং পেজের FAQ-গুলো ম্যানেজ করুন।" : "Manage FAQs displayed on the landing page."}
+                        {isHomepage
+                            ? (language === "bn" ? "হোমপেজে প্রদর্শিত FAQ-গুলো ম্যানেজ করুন।" : "Manage FAQs displayed on the homepage.")
+                            : (language === "bn" ? "অ্যাফিলিয়েট পেজে প্রদর্শিত FAQ-গুলো ম্যানেজ করুন।" : "Manage FAQs displayed on the affiliate page.")}
                     </p>
                 </div>
                 <Button onClick={() => handleOpenDialog()} className="gap-2">
@@ -174,7 +188,7 @@ export const FAQManagement = () => {
                             <TableRow>
                                 <TableCell colSpan={4} className="h-24 text-center">
                                     <EnterpriseEmptyState 
-                                        title={language === "bn" ? "কোনো প্রশ্ন পাওয়া যায়নি" : "No FAQs found"}
+                                        title={language === "bn" ? "কোনো প্রশ্ন পাওয়া যায়নি" : "No FAQs found"}
                                         description={language === "bn" ? "নতুন একটি প্রশ্ন যোগ করে শুরু করুন।" : "Start by adding a new FAQ."}
                                     />
                                 </TableCell>
@@ -228,14 +242,17 @@ export const FAQManagement = () => {
                         )}
                     </TableBody>
                 </Table>
-
                 </div>
             </div>
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle>{editingFAQ ? (language === "bn" ? "FAQ এডিট করুন" : "Edit FAQ") : (language === "bn" ? "নতুন FAQ যোগ করুন" : "Add New FAQ")}</DialogTitle>
+                        <DialogTitle>
+                            {editingFAQ
+                                ? (language === "bn" ? "FAQ এডিট করুন" : "Edit FAQ")
+                                : (language === "bn" ? `নতুন ${sectionLabel} যোগ করুন` : `Add New ${sectionLabel}`)}
+                        </DialogTitle>
                     </DialogHeader>
                     <div className="grid gap-6 py-4">
                         <div className="space-y-4">
@@ -299,7 +316,7 @@ export const FAQManagement = () => {
                 onOpenChange={(open) => !open && setConfirmDelete(null)}
                 onConfirm={handleDelete}
                 title={language === "bn" ? "FAQ মুছে ফেলুন" : "Delete FAQ"}
-                description={language === "bn" ? "আপনি কি নিশ্চিত যে আপনি এই প্রশ্নটি স্থায়ীভাবে মুছে ফেলতে চান?" : "Are you sure you want to permanently delete this FAQ?"}
+                description={language === "bn" ? "আপনি কি নিশ্চিত যে আপনি এই প্রশ্নটি স্থায়ীভাবে মুছে ফেলতে চান?" : "Are you sure you want to permanently delete this FAQ?"}
                 confirmLabel={t("delete")}
                 cancelLabel={t("cancel")}
                 type="destructive"

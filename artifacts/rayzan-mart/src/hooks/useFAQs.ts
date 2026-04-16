@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { FAQItem } from "@/types/faq";
 
+type FAQType = "homepage" | "affiliate";
+
 type DBFAQRow = {
   id: string;
   question_bn: string;
@@ -9,6 +11,7 @@ type DBFAQRow = {
   answer_bn: string;
   answer_en: string;
   category?: string;
+  faq_type: FAQType;
   is_active: boolean;
   sort_order?: number;
   created_at: string;
@@ -23,6 +26,7 @@ function dbToFAQ(row: DBFAQRow): FAQItem {
     answer_bn: row.answer_bn,
     answer_en: row.answer_en,
     category: row.category,
+    faq_type: row.faq_type,
     is_active: row.is_active,
     sort_order: row.sort_order,
     created_at: row.created_at,
@@ -48,17 +52,19 @@ function faqToDB(faq: any): Partial<DBFAQRow> {
   }
   if (faq.sort_order !== undefined) out.sort_order = faq.sort_order;
   if (faq.category !== undefined) out.category = faq.category;
+  if (faq.faq_type !== undefined) out.faq_type = faq.faq_type;
   return out;
 }
 
-export const useFAQs = () => {
+export const useHomepageFAQs = () => {
   return useQuery({
-    queryKey: ["faqs", "active"],
+    queryKey: ["faqs", "homepage", "active"],
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("faq_items")
         .select("*")
         .eq("is_active", true)
+        .eq("faq_type", "homepage")
         .order("sort_order", { ascending: true });
 
       if (error) throw error;
@@ -67,13 +73,31 @@ export const useFAQs = () => {
   });
 };
 
-export const useAdminFAQs = () => {
+export const useAffiliateFAQs = () => {
   return useQuery({
-    queryKey: ["faqs", "admin"],
+    queryKey: ["faqs", "affiliate", "active"],
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("faq_items")
         .select("*")
+        .eq("is_active", true)
+        .eq("faq_type", "affiliate")
+        .order("sort_order", { ascending: true });
+
+      if (error) throw error;
+      return ((data as unknown) as DBFAQRow[]).map(dbToFAQ);
+    },
+  });
+};
+
+export const useAdminFAQs = (faqType: FAQType) => {
+  return useQuery({
+    queryKey: ["faqs", faqType, "admin"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("faq_items")
+        .select("*")
+        .eq("faq_type", faqType)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -82,6 +106,7 @@ export const useAdminFAQs = () => {
         id: row.id,
         question: { bn: row.question_bn, en: row.question_en },
         answer: { bn: row.answer_bn, en: row.answer_en },
+        faq_type: row.faq_type,
         is_active: row.is_active,
         created_at: row.created_at,
       })) as any[];

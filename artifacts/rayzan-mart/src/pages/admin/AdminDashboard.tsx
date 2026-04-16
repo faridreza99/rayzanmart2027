@@ -292,8 +292,11 @@ const AdminDashboard = () => {
       {/* Hero Banners */}
       {activeTab === "hero-banners" && <HeroBannerManagement />}
 
+      {/* Homepage FAQs */}
+      {activeTab === "homepage-faqs" && <FAQManagement faqType="homepage" />}
+
       {/* Affiliate FAQs */}
-      {activeTab === "affiliate-faqs" && <FAQManagement />}
+      {activeTab === "affiliate-faqs" && <FAQManagement faqType="affiliate" />}
 
       {/* Affiliate Testimonials */}
       {activeTab === "affiliate-testimonials" && <TestimonialManagement />}

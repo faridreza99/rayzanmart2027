@@ -16,7 +16,7 @@ import {
 import { useLanguage } from "@/contexts/LanguageContext";
 import { CheckCircle2, Phone, Loader2 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { useFAQs } from "@/hooks/useFAQs";
+import { useAffiliateFAQs } from "@/hooks/useFAQs";
 import { useTestimonials } from "@/hooks/useTestimonials";
 import { useVideoCampaigns } from "@/hooks/useVideoCampaigns";
 import { useAffiliatePageContent, getContent } from "@/hooks/useAffiliatePageContent";
@@ -24,7 +24,7 @@ import { useAffiliatePageContent, getContent } from "@/hooks/useAffiliatePageCon
 const AffiliateLanding = () => {
   const { language } = useLanguage();
 
-  const { data: faqs, isLoading: faqsLoading } = useFAQs();
+  const { data: faqs, isLoading: faqsLoading } = useAffiliateFAQs();
   const { data: testimonials, isLoading: testimonialsLoading } = useTestimonials();
   const { data: videoCampaigns, isLoading: videosLoading } = useVideoCampaigns();
   const { data: pageContent } = useAffiliatePageContent();
