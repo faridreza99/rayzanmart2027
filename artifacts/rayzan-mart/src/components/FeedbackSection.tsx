@@ -122,7 +122,7 @@ export default function FeedbackSection() {
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
-          <Link href="/feedback">
+          <Link to="/feedback">
             <Button variant="outline" size="sm" className="gap-2">
               <MessageSquare className="w-4 h-4" />
               {language === "bn" ? "সব মতামত দেখুন" : "View All Feedback"}
