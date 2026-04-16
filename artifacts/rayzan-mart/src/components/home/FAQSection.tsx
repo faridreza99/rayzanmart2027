@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import {
   Accordion,
   AccordionContent,
@@ -6,72 +5,15 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useLanguage } from "@/contexts/LanguageContext";
-
-interface FAQRow {
-  id: string;
-  question_bn: string;
-  question_en: string;
-  answer_bn: string;
-  answer_en: string;
-  is_active: boolean;
-  sort_order: number;
-}
-
-const STATIC_FAQS: FAQRow[] = [
-  {
-    id: "1",
-    question_bn: "অ্যাফিলিয়েট প্রোগ্রাম কীভাবে কাজ করে?",
-    question_en: "How does the Affiliate Program work?",
-    answer_bn: "আপনি পণ্যের লিংক শেয়ার করে প্রতিটি সফল বিক্রয়ে কমিশন আয় করতে পারেন।",
-    answer_en: "You can share product links and earn commission on every successful sale made through your links.",
-    is_active: true,
-    sort_order: 1,
-  },
-  {
-    id: "2",
-    question_bn: "সর্বনিম্ন উত্তোলনের পরিমাণ কত?",
-    question_en: "What is the minimum withdrawal amount?",
-    answer_bn: "সর্বনিম্ন উত্তোলনের পরিমাণ ৫০০ টাকা।",
-    answer_en: "The minimum withdrawal amount is 500 BDT.",
-    is_active: true,
-    sort_order: 2,
-  },
-  {
-    id: "3",
-    question_bn: "ডেলিভারি হতে কত সময় লাগে?",
-    question_en: "How long does delivery take?",
-    answer_bn: "ঢাকার ভিতরে ১-২ দিন এবং ঢাকার বাইরে ৩-৫ দিন।",
-    answer_en: "1-2 days inside Dhaka, 3-5 days outside Dhaka.",
-    is_active: true,
-    sort_order: 3,
-  },
-  {
-    id: "4",
-    question_bn: "আমি কীভাবে আমার অর্ডার ট্র্যাক করব?",
-    question_en: "How can I track my order?",
-    answer_bn: "অর্ডার কনফার্ম হলে SMS-এ ট্র্যাকিং বিস্তারিত পাবেন।",
-    answer_en: "You will receive an SMS with tracking details once your order is confirmed.",
-    is_active: true,
-    sort_order: 4,
-  },
-];
+import { useFAQs } from "@/hooks/useFAQs";
 
 export const FAQSection = () => {
   const { language } = useLanguage();
+  const { data: faqs, isLoading } = useFAQs();
 
-  const { data: faqs } = useQuery<FAQRow[]>({
-    queryKey: ["faq-items-public"],
-    queryFn: async () => {
-      const res = await fetch("/api/db/faq_items?is_active=true&_order=sort_order:asc,created_at:asc");
-      if (!res.ok) return STATIC_FAQS;
-      const json = await res.json();
-      const rows: FAQRow[] = Array.isArray(json) ? json : json?.data ?? [];
-      return rows.length > 0 ? rows : STATIC_FAQS;
-    },
-    staleTime: 5 * 60 * 1000,
-  });
+  const list = faqs?.filter(f => f.is_active) ?? [];
 
-  const list = (faqs && faqs.length > 0) ? faqs : STATIC_FAQS;
+  if (isLoading || list.length === 0) return null;
 
   return (
     <section className="bg-slate-50 py-16">
