@@ -128,8 +128,9 @@ export const useCreateFAQ = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["faqs"] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["faqs"] });
+      await queryClient.refetchQueries({ queryKey: ["faqs"], type: "active" });
     },
   });
 };
@@ -149,8 +150,9 @@ export const useUpdateFAQ = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["faqs"] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["faqs"] });
+      await queryClient.refetchQueries({ queryKey: ["faqs"], type: "active" });
     },
   });
 };
@@ -166,8 +168,9 @@ export const useDeleteFAQ = () => {
 
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["faqs"] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["faqs"] });
+      await queryClient.refetchQueries({ queryKey: ["faqs"], type: "active" });
     },
   });
 };

@@ -148,6 +148,9 @@ router.all("/db/:table", authMiddleware, async (req, res) => {
   try {
     const params = req.query as Record<string, string>;
 
+    // Prevent browser-level HTTP caching so mutations always return fresh data
+    res.setHeader("Cache-Control", "no-store");
+
     if (req.method === "GET") {
       // Serve from cache for static public tables (no auth-sensitive data)
       if (STATIC_CACHE_TABLES.has(table) && !userId) {
