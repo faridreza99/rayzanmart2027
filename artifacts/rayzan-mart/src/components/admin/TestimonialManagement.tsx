@@ -148,7 +148,7 @@ export const TestimonialManagement = () => {
                 <div>
                     <h2 className="text-2xl font-bold tracking-tight">{t("testimonials")}</h2>
                     <p className="text-muted-foreground">
-                        {language === "bn" ? "অ্যাফিলিয়েটদের সফলতার গল্পগুলো ম্যানেজ করুন।" : "Manage success stories from your affiliates."}
+                        {language === "bn" ? "হোমপেজ ও অ্যাফিলিয়েট পেজে প্রদর্শিত সাফল্যের গল্পগুলো ম্যানেজ করুন।" : "Manage success stories shown on both the homepage and the affiliate page."}
                     </p>
                 </div>
                 <Button onClick={() => handleOpenDialog()} className="gap-2">

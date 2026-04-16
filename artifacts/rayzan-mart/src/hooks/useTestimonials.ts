@@ -26,6 +26,7 @@ function dbToTestimonial(row: DBTestimonialRow): any {
     story: { bn: row.content_bn || "", en: row.content_en || "" },
     income: { bn: row.income_bn || "", en: row.income_en || "" },
     image: row.avatar_url || null,
+    rating: row.rating ?? 5,
     is_active: row.is_active,
     created_at: row.created_at,
   };
@@ -100,8 +101,9 @@ export const useCreateTestimonial = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["testimonials"] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["testimonials"] });
+      await queryClient.refetchQueries({ queryKey: ["testimonials"], type: "active" });
     },
   });
 };
@@ -122,8 +124,9 @@ export const useUpdateTestimonial = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["testimonials"] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["testimonials"] });
+      await queryClient.refetchQueries({ queryKey: ["testimonials"], type: "active" });
     },
   });
 };
@@ -141,8 +144,9 @@ export const useDeleteTestimonial = () => {
       if (error) throw error;
       return id;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["testimonials"] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["testimonials"] });
+      await queryClient.refetchQueries({ queryKey: ["testimonials"], type: "active" });
     },
   });
 };
