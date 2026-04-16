@@ -20,6 +20,10 @@ export interface SiteSettings {
   };
   flash_sale: { is_active: boolean; end_time: string };
   footer_pages: FooterPagesSettings;
+  footer_tagline: {
+    bn: string;
+    en: string;
+  };
   contact_info: {
     phone: string;
     email: string;

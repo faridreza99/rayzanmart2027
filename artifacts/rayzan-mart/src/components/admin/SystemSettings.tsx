@@ -21,6 +21,8 @@ export const SystemSettings = () => {
 
   const [siteNameBn, setSiteNameBn] = useState("");
   const [siteNameEn, setSiteNameEn] = useState("");
+  const [footerTaglineBn, setFooterTaglineBn] = useState("");
+  const [footerTaglineEn, setFooterTaglineEn] = useState("");
   const [affiliateEnabled, setAffiliateEnabled] = useState(true);
   const [couponsEnabled, setCouponsEnabled] = useState(true);
   const [demoMode, setDemoMode] = useState(true);
@@ -58,6 +60,8 @@ export const SystemSettings = () => {
     if (settings) {
       setSiteNameBn(settings.site_name?.bn || "রায়জন মার্ট");
       setSiteNameEn(settings.site_name?.en || "BanglaShop");
+      setFooterTaglineBn(settings.footer_tagline?.bn || "");
+      setFooterTaglineEn(settings.footer_tagline?.en || "");
       setAffiliateEnabled(settings.modules?.affiliate ?? true);
       setCouponsEnabled(settings.modules?.coupons ?? true);
       setDemoMode(settings.modules?.demo_mode ?? true);
@@ -99,6 +103,10 @@ export const SystemSettings = () => {
       await updateSetting.mutateAsync({
         key: "site_name",
         value: { bn: siteNameBn, en: siteNameEn },
+      });
+      await updateSetting.mutateAsync({
+        key: "footer_tagline",
+        value: { bn: footerTaglineBn, en: footerTaglineEn },
       });
 
       if (siteLogoUrl !== settings?.site_logo?.url) {
@@ -299,6 +307,25 @@ export const SystemSettings = () => {
                 value={siteNameEn}
                 onChange={(e) => setSiteNameEn(e.target.value)}
                 placeholder="BanglaShop"
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label>{language === "bn" ? "Footer ট্যাগলাইন (বাংলা)" : "Footer Tagline (Bangla)"}</Label>
+              <Input
+                value={footerTaglineBn}
+                onChange={(e) => setFooterTaglineBn(e.target.value)}
+                placeholder="বাংলাদেশের বিশ্বস্ত অনলাইন শপিং প্ল্যাটফর্ম।"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{language === "bn" ? "Footer ট্যাগলাইন (ইংরেজি)" : "Footer Tagline (English)"}</Label>
+              <Input
+                value={footerTaglineEn}
+                onChange={(e) => setFooterTaglineEn(e.target.value)}
+                placeholder="Bangladesh's trusted online shopping platform."
               />
             </div>
           </div>

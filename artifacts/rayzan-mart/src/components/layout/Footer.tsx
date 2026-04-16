@@ -40,9 +40,13 @@ export const Footer = () => {
               ) : null}
               <span>{siteName}</span>
             </h3>
-            <p className="mb-4 text-sm text-muted-foreground">
-              {t("footerTagline")}
-            </p>
+            {(settings?.footer_tagline?.bn || settings?.footer_tagline?.en) && (
+              <p className="mb-4 text-sm text-muted-foreground">
+                {language === "bn"
+                  ? settings.footer_tagline.bn
+                  : settings.footer_tagline.en}
+              </p>
+            )}
             <div className="flex gap-3">
               {facebookUrl && (
                 <a href={facebookUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
