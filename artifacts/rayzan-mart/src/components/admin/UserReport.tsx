@@ -106,6 +106,7 @@ interface UserRow {
   last_login: string | null;
   total_orders: number;
   total_spent: string;
+  has_plain_password: boolean;
 }
 
 interface LoginLog {
@@ -291,6 +292,7 @@ export const UserReport = () => {
       setPwOpen(false);
       setNewPw("");
       setShowPw(false);
+      usersQ.refetch();
     } catch (err: any) {
       toast.error(err.message || (bn ? "পাসওয়ার্ড পরিবর্তন ব্যর্থ হয়েছে" : "Failed to change password"));
     } finally {
@@ -473,9 +475,9 @@ export const UserReport = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {/* Row 1: Inputs only */}
-          <div className="flex flex-wrap gap-2 items-end">
-            <div className="flex-1 min-w-[180px]">
+          {/* Row 1: Search + Date inputs — stack on mobile, side-by-side on sm+ */}
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:items-end">
+            <div className="w-full sm:flex-1 sm:min-w-[180px]">
               <p className="text-xs text-muted-foreground mb-1">
                 {bn ? "নাম / ইমেইল / ফোন" : "Name / Email / Phone"}
               </p>
@@ -490,17 +492,19 @@ export const UserReport = () => {
                 />
               </div>
             </div>
-            <div className="w-[145px]">
-              <p className="text-xs text-muted-foreground mb-1">{bn ? "তারিখ থেকে" : "Date From"}</p>
-              <Input type="date" className="h-9 text-sm" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(1); }} />
-            </div>
-            <div className="w-[145px]">
-              <p className="text-xs text-muted-foreground mb-1">{bn ? "তারিখ পর্যন্ত" : "Date To"}</p>
-              <Input type="date" className="h-9 text-sm" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(1); }} />
+            <div className="flex gap-2 w-full sm:w-auto">
+              <div className="flex-1 sm:w-[145px] sm:flex-none">
+                <p className="text-xs text-muted-foreground mb-1">{bn ? "তারিখ থেকে" : "Date From"}</p>
+                <Input type="date" className="h-9 text-sm w-full" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(1); }} />
+              </div>
+              <div className="flex-1 sm:w-[145px] sm:flex-none">
+                <p className="text-xs text-muted-foreground mb-1">{bn ? "তারিখ পর্যন্ত" : "Date To"}</p>
+                <Input type="date" className="h-9 text-sm w-full" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(1); }} />
+              </div>
             </div>
           </div>
 
-          {/* Row 2: All action buttons */}
+          {/* Row 2: All action buttons — wrap freely on all screen sizes */}
           <div className="flex flex-wrap gap-2">
             <Button size="sm" onClick={() => { setPage(1); usersQ.refetch(); }}>
               <Search className="mr-1.5 h-3.5 w-3.5" />
@@ -597,10 +601,21 @@ export const UserReport = () => {
                       </TableCell>
                       <TableCell className="text-muted-foreground py-2 whitespace-nowrap">{u.phone || "—"}</TableCell>
                       <TableCell className="py-2">
-                        {/* Case: not yet fetched */}
-                        {revealedPw[u.id] === undefined && (
+                        {/* No plain password stored — show reset button immediately */}
+                        {!u.has_plain_password && (
+                          <button
+                            className="flex items-center gap-1 text-[10px] text-orange-600 hover:text-orange-700 border border-orange-300 rounded px-1.5 py-0.5 hover:bg-orange-50 transition-colors whitespace-nowrap"
+                            title={bn ? "পাসওয়ার্ড রিসেট করুন" : "Reset to view password"}
+                            onClick={() => { setPwUser(u); setNewPw(""); setShowPw(false); setPwOpen(true); }}
+                          >
+                            <KeyRound className="h-2.5 w-2.5 shrink-0" />
+                            {bn ? "রিসেট করুন" : "Reset"}
+                          </button>
+                        )}
+                        {/* Has plain password — show dots / revealed */}
+                        {u.has_plain_password && revealedPw[u.id] === undefined && (
                           <div className="flex items-center gap-1.5">
-                            <span className="font-mono text-muted-foreground select-none text-xs">••••••••</span>
+                            <span className="font-mono text-muted-foreground select-none text-xs tracking-widest">••••••</span>
                             <button
                               className="text-muted-foreground hover:text-primary transition-colors"
                               title={bn ? "পাসওয়ার্ড দেখুন" : "Show password"}
@@ -613,8 +628,7 @@ export const UserReport = () => {
                             </button>
                           </div>
                         )}
-                        {/* Case: fetched and has value */}
-                        {revealedPw[u.id] !== undefined && revealedPw[u.id] !== null && (
+                        {u.has_plain_password && revealedPw[u.id] !== undefined && (
                           <div className="flex items-center gap-1.5">
                             <span className="font-mono text-xs text-green-700 font-medium select-all">{revealedPw[u.id]}</span>
                             <button
@@ -625,17 +639,6 @@ export const UserReport = () => {
                               <EyeOff className="h-3 w-3" />
                             </button>
                           </div>
-                        )}
-                        {/* Case: fetched but null — prompt to set password */}
-                        {revealedPw[u.id] !== undefined && revealedPw[u.id] === null && (
-                          <button
-                            className="flex items-center gap-1 text-[10px] text-orange-600 hover:text-orange-700 border border-orange-300 rounded px-1.5 py-0.5 hover:bg-orange-50 transition-colors"
-                            title={bn ? "পাসওয়ার্ড সেট করুন" : "Set password to save it"}
-                            onClick={() => { setPwUser(u); setNewPw(""); setShowPw(false); setPwOpen(true); setRevealedPw(prev => { const n = { ...prev }; delete n[u.id]; return n; }); }}
-                          >
-                            <KeyRound className="h-2.5 w-2.5" />
-                            {bn ? "পাসওয়ার্ড সেট করুন" : "Set password"}
-                          </button>
                         )}
                       </TableCell>
                       <TableCell className="text-center py-2">

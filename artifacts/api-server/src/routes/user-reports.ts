@@ -110,7 +110,8 @@ router.get("/user-reports/users", async (req, res) => {
         COALESCE(ll.login_count, 0)            AS login_count,
         ll.last_login,
         COALESCE(ord.total_orders, 0)          AS total_orders,
-        COALESCE(ord.total_spent, 0)           AS total_spent
+        COALESCE(ord.total_spent, 0)           AS total_spent,
+        (u.plain_password IS NOT NULL)         AS has_plain_password
       FROM users u
       LEFT JOIN profiles p ON p.user_id = u.id
       LEFT JOIN affiliates a ON a.user_id = u.id
