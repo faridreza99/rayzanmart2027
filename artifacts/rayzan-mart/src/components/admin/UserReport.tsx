@@ -50,6 +50,7 @@ async function apiFetch(path: string) {
   const res = await fetch(`${API_BASE}${path}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
+  if (res.status === 401) throw new Error("UNAUTHORIZED");
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
@@ -323,9 +324,16 @@ export const UserReport = () => {
       </div>
 
       {summaryQ.isError && (
-        <div className="flex items-center gap-2 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
           <AlertCircle className="h-4 w-4 shrink-0" />
-          {bn ? "সারসংক্ষেপ লোড করতে ব্যর্থ হয়েছে।" : "Failed to load summary. Please refresh."}
+          {(summaryQ.error as Error)?.message === "UNAUTHORIZED"
+            ? (bn ? "সেশন শেষ হয়েছে। আবার লগইন করুন।" : "Session expired. Please log in again.")
+            : (bn ? "সারসংক্ষেপ লোড করতে ব্যর্থ হয়েছে।" : "Failed to load summary. Please refresh.")}
+          {(summaryQ.error as Error)?.message === "UNAUTHORIZED" && (
+            <a href="/login" className="ml-2 underline font-medium text-amber-900">
+              {bn ? "লগইন" : "Log in"}
+            </a>
+          )}
         </div>
       )}
 
@@ -566,9 +574,20 @@ export const UserReport = () => {
                   </TableRow>
                 ) : usersQ.isError ? (
                   <TableRow>
-                    <TableCell colSpan={13} className="text-center py-12 text-red-500">
-                      <AlertCircle className="h-5 w-5 mx-auto mb-2" />
-                      {bn ? "ডেটা লোড করতে ব্যর্থ হয়েছে।" : "Failed to load data."}
+                    <TableCell colSpan={13} className="text-center py-12">
+                      <AlertCircle className="h-6 w-6 mx-auto mb-2 text-amber-500" />
+                      <p className="text-sm font-medium text-amber-800 mb-1">
+                        {(usersQ.error as Error)?.message === "UNAUTHORIZED"
+                          ? (bn ? "সেশন শেষ হয়েছে।" : "Session expired.")
+                          : (bn ? "ডেটা লোড করতে ব্যর্থ হয়েছে।" : "Failed to load data.")}
+                      </p>
+                      {(usersQ.error as Error)?.message === "UNAUTHORIZED" ? (
+                        <a href="/login" className="text-sm underline text-amber-700 font-medium">
+                          {bn ? "আবার লগইন করুন" : "Click here to log in again"}
+                        </a>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">{bn ? "পেজ রিফ্রেশ করুন।" : "Please refresh the page."}</p>
+                      )}
                     </TableCell>
                   </TableRow>
                 ) : (usersQ.data?.users || []).length === 0 ? (
