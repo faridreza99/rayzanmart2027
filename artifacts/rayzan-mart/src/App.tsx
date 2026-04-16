@@ -35,6 +35,7 @@ const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 import { useSiteSettings } from "@/hooks/useAdminSettings";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useReferralTracking } from "@/hooks/useReferralTracking";
+import { ScrollToTop } from "./components/ScrollToTop";
 
 const DynamicTitle = () => {
   const { data: settings } = useSiteSettings();
@@ -91,6 +92,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
+              <ScrollToTop />
               <ReferralTracker />
               <DynamicTitle />
               <Suspense fallback={<PageLoader />}>

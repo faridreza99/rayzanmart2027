@@ -250,9 +250,31 @@ const ProductDetailPage = () => {
 
   return (
     <MainLayout>
-      <div className="container py-6">
+      {/* Mobile sticky action bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-30 border-t bg-card px-4 py-3 flex gap-3 md:hidden shadow-lg">
+        <Button
+          size="lg"
+          className="flex-1"
+          onClick={handleAddToCart}
+          disabled={displayStock === 0 || (product.hasVariants && !currentVariant)}
+        >
+          <ShoppingCart className="mr-2 h-5 w-5" />
+          {t("addToCart")}
+        </Button>
+        <Button
+          size="lg"
+          variant="outline"
+          className="flex-1 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+          onClick={handleBuyNow}
+          disabled={displayStock === 0 || (product.hasVariants && !currentVariant)}
+        >
+          {t("buyNow")}
+        </Button>
+      </div>
+
+      <div className="container py-4 md:py-6 pb-24 md:pb-6">
         {/* Breadcrumb */}
-        <nav className="mb-6 text-sm text-muted-foreground">
+        <nav className="mb-4 md:mb-6 text-sm text-muted-foreground overflow-hidden">
           <Link to="/" className="hover:text-primary">{t("home")}</Link>
           <span className="mx-2">/</span>
           <Link to="/products" className="hover:text-primary">{t("products")}</Link>
@@ -268,7 +290,7 @@ const ProductDetailPage = () => {
           <span>{product.name[language]}</span>
         </nav>
 
-        <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_360px]">
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_360px]">
           {/* Images with Zoom */}
           <div>
             <div className="rounded-xl border bg-card p-3">
@@ -498,32 +520,35 @@ const ProductDetailPage = () => {
             </div>
 
             {/* Actions */}
-            <div className="mb-6 flex flex-col gap-3 sm:flex-row">
-              <Button
-                size="lg"
-                className="flex-1 btn-bounce"
-                onClick={handleAddToCart}
-                disabled={displayStock === 0 || (product.hasVariants && !currentVariant)}
-              >
-                <ShoppingCart className="mr-2 h-5 w-5" />
-                {t("addToCart")}
-              </Button>
-              <Button
-                size="lg"
-                className="flex-1"
-                onClick={handleBuyNow}
-                disabled={displayStock === 0 || (product.hasVariants && !currentVariant)}
-              >
-                {t("buyNow")}
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleWishlistToggle}
-                disabled={addToWishlist.isPending || removeFromWishlist.isPending}
-              >
-                <Heart className={`h-5 w-5 ${isInWishlist ? "fill-current text-destructive" : ""}`} />
-              </Button>
+            <div className="mb-6 flex flex-col gap-3">
+              <div className="hidden md:flex gap-3">
+                <Button
+                  size="lg"
+                  className="flex-1 btn-bounce"
+                  onClick={handleAddToCart}
+                  disabled={displayStock === 0 || (product.hasVariants && !currentVariant)}
+                >
+                  <ShoppingCart className="mr-2 h-5 w-5" />
+                  {t("addToCart")}
+                </Button>
+                <Button
+                  size="lg"
+                  className="flex-1"
+                  onClick={handleBuyNow}
+                  disabled={displayStock === 0 || (product.hasVariants && !currentVariant)}
+                >
+                  {t("buyNow")}
+                </Button>
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleWishlistToggle}
+                  disabled={addToWishlist.isPending || removeFromWishlist.isPending}
+                >
+                  <Heart className={`h-5 w-5 ${isInWishlist ? "fill-current text-destructive" : ""}`} />
+                </Button>
               {/* Share button with dropdown */}
               <div className="relative">
                 <Button variant="outline" size="icon" onClick={() => setShowShareMenu(!showShareMenu)}>
@@ -554,6 +579,7 @@ const ProductDetailPage = () => {
                     </button>
                   </div>
                 )}
+              </div>
               </div>
             </div>
 

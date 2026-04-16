@@ -193,27 +193,27 @@ export const Header = () => {
     <header className="sticky top-0 z-50 w-full border-b bg-card shadow-sm">
       {/* Top bar */}
       <div className="bg-primary text-primary-foreground">
-        <div className="container flex h-8 items-center justify-between text-sm">
+        <div className="container flex h-8 items-center justify-between text-xs sm:text-sm">
           {/* Logo + site name — left side of top bar */}
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-1.5 min-w-0">
             {settings?.site_logo?.url ? (
               <img
                 src={settings.site_logo.url}
                 alt={siteName}
-                className="h-5 w-auto object-contain"
+                className="h-4 sm:h-5 w-auto object-contain shrink-0"
               />
             ) : null}
-            <span className="font-bold text-primary-foreground">{siteName}</span>
+            <span className="font-bold text-primary-foreground truncate">{siteName}</span>
           </Link>
-          <div className="flex items-center gap-4">
-            <Link to="/affiliate-landing" className="hover:underline">
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+            <Link to="/affiliate-landing" className="hover:underline hidden sm:inline">
               {t("affiliateProgram")}
             </Link>
             <button
               onClick={() => setLanguage(language === "bn" ? "en" : "bn")}
-              className="flex items-center gap-1 hover:underline"
+              className="flex items-center gap-1 hover:underline whitespace-nowrap"
             >
-              <Globe className="h-4 w-4" />
+              <Globe className="h-3 w-3 sm:h-4 sm:w-4" />
               {language === "bn" ? "English" : "বাংলা"}
             </button>
           </div>

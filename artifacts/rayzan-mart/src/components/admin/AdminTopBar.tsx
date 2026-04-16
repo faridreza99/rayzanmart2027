@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Bell, Globe, User, LogOut, Settings, Loader2, Eye, EyeOff, Camera } from "lucide-react";
+import { Bell, Globe, User, LogOut, Settings, Loader2, Eye, EyeOff, Camera, Menu } from "lucide-react";
 import { Shield } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,7 +30,11 @@ import { toast } from "sonner";
 import { getToken } from "@/lib/api-client";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 
-export const AdminTopBar = () => {
+interface AdminTopBarProps {
+  onMobileMenuOpen?: () => void;
+}
+
+export const AdminTopBar = ({ onMobileMenuOpen }: AdminTopBarProps = {}) => {
   const { language, setLanguage, t } = useLanguage();
   const { user, logout, refreshUser } = useAuth();
   const { adminLevel, setAdminLevel } = useAdminRole();
@@ -154,11 +158,22 @@ export const AdminTopBar = () => {
 
   return (
     <>
-      <header className="flex h-14 items-center justify-between border-b bg-card px-4">
+      <header className="flex h-14 items-center justify-between border-b bg-card px-3 md:px-4 gap-2">
+        {/* Mobile menu trigger */}
+        {onMobileMenuOpen && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="shrink-0 md:hidden"
+            onClick={onMobileMenuOpen}
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+        )}
         {/* Left: Title */}
-        <div>
-          <h1 className="text-sm font-semibold">{t("executiveOverview")}</h1>
-          <p className="text-xs text-muted-foreground">
+        <div className="min-w-0">
+          <h1 className="text-sm font-semibold truncate">{t("executiveOverview")}</h1>
+          <p className="text-xs text-muted-foreground hidden sm:block">
             {new Date().toLocaleDateString(language === "bn" ? "bn-BD" : "en-US", {
               weekday: "long",
               year: "numeric",

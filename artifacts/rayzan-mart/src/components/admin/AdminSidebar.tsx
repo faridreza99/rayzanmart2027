@@ -1,24 +1,16 @@
 import { useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
-  Package,
   ShoppingCart,
   Users,
   UserCheck,
-  CreditCard,
-  Percent,
   Megaphone,
-  Tag,
-  Gift,
-  BarChart3,
   Settings,
-  History,
   ChevronDown,
   ChevronRight,
   FolderTree,
   Menu,
-  Server,
+  X,
   Star,
   FileText,
 } from "lucide-react";
@@ -113,6 +105,7 @@ interface AdminSidebarProps {
   onTabChange: (tab: string) => void;
   collapsed: boolean;
   onCollapse: (collapsed: boolean) => void;
+  isMobile?: boolean;
 }
 
 export const AdminSidebar = ({
@@ -120,6 +113,7 @@ export const AdminSidebar = ({
   onTabChange,
   collapsed,
   onCollapse,
+  isMobile = false,
 }: AdminSidebarProps) => {
   const { t } = useLanguage();
   const [expandedGroups, setExpandedGroups] = useState<string[]>(["catalog"]);
@@ -141,6 +135,18 @@ export const AdminSidebar = ({
     return false;
   };
 
+  const handleGroupClick = (item: NavItem) => {
+    if (collapsed && !isMobile) {
+      // On desktop collapsed mode, expand the sidebar first
+      onCollapse(false);
+      setExpandedGroups((prev) =>
+        prev.includes(item.id) ? prev : [...prev, item.id]
+      );
+    } else {
+      toggleGroup(item.id);
+    }
+  };
+
   return (
     <aside
       className={cn(
@@ -149,7 +155,7 @@ export const AdminSidebar = ({
       )}
     >
       {/* Sidebar Header */}
-      <div className="flex h-14 items-center justify-between border-b px-3">
+      <div className="flex h-14 items-center justify-between border-b px-3 shrink-0">
         {!collapsed && (
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground font-bold text-sm">
@@ -164,7 +170,11 @@ export const AdminSidebar = ({
           className="h-8 w-8 shrink-0"
           onClick={() => onCollapse(!collapsed)}
         >
-          <Menu className="h-4 w-4" />
+          {isMobile ? (
+            <X className="h-4 w-4" />
+          ) : (
+            <Menu className="h-4 w-4" />
+          )}
         </Button>
       </div>
 
@@ -180,7 +190,7 @@ export const AdminSidebar = ({
                 <Collapsible
                   key={item.id}
                   open={isExpanded && !collapsed}
-                  onOpenChange={() => !collapsed && toggleGroup(item.id)}
+                  onOpenChange={() => handleGroupClick(item)}
                 >
                   <CollapsibleTrigger asChild>
                     <button
@@ -247,7 +257,7 @@ export const AdminSidebar = ({
 
       {/* Footer */}
       {!collapsed && (
-        <div className="border-t p-3">
+        <div className="border-t p-3 shrink-0">
           <div className="rounded-md bg-muted/50 px-3 py-2">
             <p className="text-xs text-muted-foreground">{t("operationalStatus")}</p>
             <div className="mt-1 flex items-center gap-1.5">
